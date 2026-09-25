@@ -29,7 +29,7 @@ def prediction_from_yolo_annotation(
                 "type": type_value,
                 "source": source_value,
                 "value": {
-                    "rectanglelabels": label,
+                    "rectanglelabels": [label],
                     "x": bbox[0] * 100.0,
                     "y": bbox[1] * 100.0,
                     "width": bbox[2] * 100.0,
