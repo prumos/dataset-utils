@@ -89,7 +89,7 @@ def gen_tasks_for_local_images(
     )
     tasks = []
     for img in images:
-        task = _gen_task_for_local_image(img.relative_to(local_root))
+        task = _gen_task_for_local_image(img.relative_to(local_root).as_posix())
         if index_cls_map is not None:
             task["predictions"] = [
                 prediction_from_yolo_annotation(
