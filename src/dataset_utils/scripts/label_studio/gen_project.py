@@ -1,4 +1,5 @@
 import argparse
+import json
 
 from dataset_utils.label_studio import gen_tasks_for_local_images
 
@@ -38,7 +39,6 @@ def _run() -> int:
             help="Image formats to consider.",
         )
         parser.add_argument(
-            "-i",
             "--indentation",
             type=int,
             default=2,
@@ -57,10 +57,12 @@ def _run() -> int:
             json_save_file=args.save_file,
             json_indentation=args.indentation,
         )
-        if args.verbose:
-            import json
-
-            print(json.dumps(obj=project, indent=args.indentation))
+        indent = None if args.indentation < 1 else args.indentation
+        with open(args.save_file, mode="w") as json_file:
+            json_string = json.dumps(obj=project, indent=indent)
+            json_file.write(json_string)
+            if args.verbose:
+                print(json_string)
         return 0
     except Exception:
         import traceback

@@ -1,5 +1,4 @@
 import os
-import json
 from pathlib import Path
 
 from dataset_utils.yolo import load_annotation
@@ -64,8 +63,6 @@ def get_local_files_root(fallback: str | Path = "/") -> Path | None:
 def gen_tasks_for_local_images(
     images_dir: str | Path,
     image_formats: list[str] = [".jpg", ".png"],
-    json_save_file: str | Path | None = None,
-    json_indentation: int = 2,
 ):
     local_root = get_local_files_root()
     if local_root is None:
@@ -98,8 +95,4 @@ def gen_tasks_for_local_images(
                 )
             ]
         tasks.append(task)
-    if json_save_file is not None:
-        json_indentation = None if json_indentation < 1 else json_indentation
-        with Path(json_save_file).open("w") as json_save_file:
-            json.dump(obj=tasks, fp=json_save_file, indent=json_indentation)
     return tasks
