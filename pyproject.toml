@@ -18,6 +18,9 @@ Issues = "https://github.com/prumos/dataset-utils/issues"
 [project.optional-dependencies]
 label-studio = ["label-studio"]
 
+[project.scripts]
+gen-project = "dataset_utils:scripts:label_studio:gen_project:_run"
+
 
 [tool.setuptools]
 packages = []
