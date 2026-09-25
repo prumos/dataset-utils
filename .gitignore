@@ -8,3 +8,4 @@ __pycache__/
 # Label Studio data and local storage
 label-studio/app/
 label-studio/local_store/
+label-studio/projects/
