@@ -1,5 +1,6 @@
-# Python venv
+# Python
 venv*/
+__pycache__/
 
 # Package build
 *.egg-info/
