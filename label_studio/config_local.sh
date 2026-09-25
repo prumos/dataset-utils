@@ -45,9 +45,9 @@ fi
 
 BASE_DIR="$(cd "$BASE_DIR" && pwd)"
 
-export LABEL_STUDIO_BASE_DATA_DIR="$BASE_DIR/label-studio/app"
+export LABEL_STUDIO_BASE_DATA_DIR="$BASE_DIR/label_studio/app"
 export LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED="true"
-export LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT="$BASE_DIR/label-studio/local_store"
+export LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT="$BASE_DIR/label_studio/local_store"
 export LABEL_STUDIO_PORT="8080"
 if [[ -n "$HOST_URL" ]]; then
     export LABEL_STUDIO_HOST="$HOST_URL"

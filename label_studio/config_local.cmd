@@ -57,10 +57,10 @@ if defined HOST_URL (
     )
 )
 
-set "LABEL_STUDIO_BASE_DATA_DIR=%BASE_DIR%\\label-studio\\app"
+set "LABEL_STUDIO_BASE_DATA_DIR=%BASE_DIR%\\label_studio\\app"
 set "LABEL_STUDIO_PORT=8080"
 set "LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true"
-set "LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=%BASE_DIR%\\label-studio\\local_store"
+set "LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=%BASE_DIR%\\label_studio\\local_store"
 
 echo Label Studio environment configured:
 echo   LABEL_STUDIO_BASE_DATA_DIR=%LABEL_STUDIO_BASE_DATA_DIR%
