@@ -13,13 +13,12 @@ class DetectionLabel(TypedDict):
 def index_class_name_map_from_class_file(
     classes_file: str | Path
 ) -> dict[int, str]:
-    index_class_map = {}
-    with Path(classes_file).open("r") as cls_file:
-        for line in cls_file.readlines():
-            if not (line := line.strip()):
-                break
-            index, class_name = line.split()
-            index_class_map[int(index)] = class_name
+    index_class_map = {
+        i: class_name.strip()
+        for i, class_name in enumerate(
+            Path(classes_file).read_text().strip().splitlines()
+        )
+    }
     return index_class_map
 
 
