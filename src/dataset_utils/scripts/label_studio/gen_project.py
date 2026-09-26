@@ -2,7 +2,7 @@ import argparse
 import json
 from pathlib import Path
 
-from dataset_utils.label_studio import gen_tasks_for_local_images
+from dataset_utils.label_studio import get_tasks_for_local_images
 
 
 def _run() -> int:
@@ -54,7 +54,7 @@ def _run() -> int:
         args = parser.parse_args()
         save_file = Path(args.save_file).resolve()
         save_file.parent.mkdir(exist_ok=True, parents=True)
-        project = gen_tasks_for_local_images(
+        project = get_tasks_for_local_images(
             images_dir=args.images_dir,
             image_formats=args.img_fmts,
         )

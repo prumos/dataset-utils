@@ -73,7 +73,7 @@ def get_local_files_root(fallback: str | Path = "/") -> Path | None:
     return Path(local_files_root).resolve()
 
 
-def gen_tasks_for_local_images(
+def get_tasks_for_local_images(
     images_dir: str | Path,
     image_formats: list[str] = [".jpg", ".png"],
 ) -> list[LabelStudioTask]:
