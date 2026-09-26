@@ -6,6 +6,6 @@ __pycache__/
 *.egg-info/
 
 # Label Studio data and local storage
-label-studio/app/
-label-studio/local_store/
-label-studio/projects/
+label_studio/app/
+label_studio/local_store/
+label_studio/projects/
