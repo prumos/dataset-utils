@@ -10,9 +10,7 @@ class DetectionLabel(TypedDict):
     labels: list[int] | list[str]
 
 
-def index_class_name_map_from_class_file(
-    classes_file: str | Path
-) -> dict[int, str]:
+def load_index_class_map(classes_file: str | Path) -> dict[int, str]:
     index_class_map = {
         i: class_name.strip()
         for i, class_name in enumerate(

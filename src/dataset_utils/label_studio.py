@@ -6,8 +6,7 @@ from math import ceil
 from pathlib import Path
 from typing import NotRequired, TypedDict, Any
 
-from dataset_utils.yolo import load_annotation
-from dataset_utils.yolo import index_class_name_map_from_class_file
+from dataset_utils.yolo import load_annotation, load_index_class_map
 
 
 type LabelStudioPrediction = dict[str, Any]
@@ -99,7 +98,7 @@ def get_tasks_for_local_images(
     image_formats = _check_file_formats(image_formats)
     classes_file = images_dir / "classes.txt"
     index_cls_map = (
-        index_class_name_map_from_class_file(classes_file)
+        load_index_class_map(classes_file)
         if classes_file.is_file()
         else None
     )
@@ -142,7 +141,7 @@ def gen_tasks_for_local_images(
     json_indentation = None if json_indentation < 1 else json_indentation
     classes_file = images_dir / "classes.txt"
     index_cls_map = (
-        index_class_name_map_from_class_file(classes_file)
+        load_index_class_map(classes_file)
         if classes_file.is_file()
         else None
     )
