@@ -41,7 +41,7 @@ def load_annotation(
             x1, x2 = round(x1 * w), round(x2 * w)
             y1, y2 = round(y1 * h), round(y2 * h)
         labels.append(int(label))
-        bboxes.append((x1, y2, x2, y2))
+        bboxes.append((x1, y1, x2, y2))
     return {
         "labels": (
             labels
