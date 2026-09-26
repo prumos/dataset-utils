@@ -1,5 +1,6 @@
 import argparse
 import json
+from pathlib import Path
 
 from dataset_utils.label_studio import gen_tasks_for_local_images
 
@@ -51,14 +52,14 @@ def _run() -> int:
             help="Print the generated project in stdout.",
         )
         args = parser.parse_args()
+        save_file = Path(args.save_file).resolve()
+        save_file.parent.mkdir(exist_ok=True, parents=True)
         project = gen_tasks_for_local_images(
             images_dir=args.images_dir,
             image_formats=args.img_fmts,
-            json_save_file=args.save_file,
-            json_indentation=args.indentation,
         )
         indent = None if args.indentation < 1 else args.indentation
-        with open(args.save_file, mode="w") as json_file:
+        with save_file.open("w") as json_file:
             json_string = json.dumps(obj=project, indent=indent)
             json_file.write(json_string)
             if args.verbose:
