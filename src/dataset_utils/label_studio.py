@@ -1,4 +1,5 @@
 import os
+import json
 from collections import defaultdict
 from collections.abc import Callable, Hashable
 from math import ceil
@@ -53,7 +54,7 @@ def prediction_from_yolo_annotation(
     }
 
 
-def _gen_task_for_local_image(rel_img_path: str) -> LabelStudioTask:
+def _get_task_for_local_image(rel_img_path: str) -> LabelStudioTask:
     return {
         "data": {
             "image": f"/data/local-files/?d={rel_img_path}",
@@ -61,10 +62,14 @@ def _gen_task_for_local_image(rel_img_path: str) -> LabelStudioTask:
     }
 
 
-def get_local_files_root(fallback: str | Path = "/") -> Path | None:
+def get_local_files_root(fallback: str | Path = "/") -> Path:
     enabled = os.environ.get("LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED", "")
     if enabled != "true":
-        return None
+        raise RuntimeError(
+            "Local file serving is not enabled. "
+            'Set "LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED" to "true" and '
+            '"LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT" to the appropriate path.'
+        )
     local_files_root  = os.environ.get(
         "LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT",
         "",
@@ -73,21 +78,19 @@ def get_local_files_root(fallback: str | Path = "/") -> Path | None:
     return Path(local_files_root).resolve()
 
 
+def _check_file_formats(fmts: list[str]) -> list[str]:
+    return sorted(
+        frozenset((fmt if fmt.startswith(".") else f".{fmt}") for fmt in fmts)
+    )
+
+
 def get_tasks_for_local_images(
     images_dir: str | Path,
     image_formats: list[str] = [".jpg", ".png"],
 ) -> list[LabelStudioTask]:
     local_root = get_local_files_root()
-    if local_root is None:
-        raise RuntimeError(
-            "Local file serving is not enabled. "
-            'Set "LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED" to "true" and '
-            '"LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT" to the appropriate path.'
-        )
     images_dir = Path(images_dir).resolve()
-    image_formats = frozenset(
-        (fmt if fmt.startswith(".") else f".{fmt}") for fmt in image_formats
-    )
+    image_formats = _check_file_formats(image_formats)
     images = [
         img for img in images_dir.iterdir() if img.suffix in image_formats
     ]
@@ -99,7 +102,7 @@ def get_tasks_for_local_images(
     )
     tasks = []
     for img in images:
-        task = _gen_task_for_local_image(img.relative_to(local_root).as_posix())
+        task = _get_task_for_local_image(img.relative_to(local_root).as_posix())
         if index_cls_map is not None:
             task["predictions"] = [
                 prediction_from_yolo_annotation(
@@ -109,6 +112,49 @@ def get_tasks_for_local_images(
             ]
         tasks.append(task)
     return tasks
+
+
+def gen_tasks_for_local_images(
+    images_dir: str | Path,
+    image_formats: list[str] = [".jpg", ".png"],
+    json_indentation: int = 2,
+    recurse_images_dir: bool = True,
+) -> None:
+    local_root = get_local_files_root()
+    images_dir = Path(images_dir).resolve()
+    if not images_dir.is_relative_to(local_root):
+        raise ValueError(
+            f'"{images_dir}" is not part of the '
+            'local files root tree "{local_root}"'
+        )
+    image_formats = _check_file_formats(image_formats)
+    json_indentation = None if json_indentation < 1 else json_indentation
+    classes_file = images_dir / "classes.txt"
+    index_cls_map = (
+        index_class_name_map_from_class_file(classes_file)
+        if classes_file.is_file()
+        else None
+    )
+    for fmt in image_formats:
+        for img in (
+            images_dir.rglob(f"*{fmt}")
+            if recurse_images_dir
+            else images_dir.glob(f"*{fmt}")
+        ):
+            task = _get_task_for_local_image(img.relative_to(local_root).as_posix())
+            if index_cls_map is not None:
+                try:
+                    task["predictions"] = [
+                        prediction_from_yolo_annotation(
+                            annotation_path=img.with_suffix(".txt"),
+                            index_cls_name_map=index_cls_map,
+                        )
+                    ]
+                except FileNotFoundError:
+                    pass
+            with img.with_suffix(".json").open("w") as task_file:
+                json.dump(obj=task, fp=task_file, indent=json_indentation)
+    return
 
 
 def split_tasks(
