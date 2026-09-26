@@ -1,8 +1,21 @@
 import os
+from collections import defaultdict
+from collections.abc import Callable, Hashable
+from math import ceil
 from pathlib import Path
+from typing import NotRequired, TypedDict, Any
 
 from dataset_utils.yolo import load_annotation
 from dataset_utils.yolo import index_class_name_map_from_class_file
+
+
+type LabelStudioPrediction = dict[str, Any]
+type LabelStudioAnnotation = dict[str, Any]
+
+class LabelStudioTask(TypedDict):
+    data: dict[str, Any]
+    annotations: NotRequired[list[LabelStudioAnnotation]]
+    predictions: NotRequired[list[LabelStudioPrediction]]
 
 
 def prediction_from_yolo_annotation(
@@ -13,7 +26,7 @@ def prediction_from_yolo_annotation(
     type_value: str = "rectanglelabels",
     source_value: str = "$image",
     model_version: str | None = None,
-):
+) -> LabelStudioPrediction:
     annotation = load_annotation(
         annotation_path,
         format="tlwh",
@@ -40,7 +53,7 @@ def prediction_from_yolo_annotation(
     }
 
 
-def _gen_task_for_local_image(rel_img_path: str):
+def _gen_task_for_local_image(rel_img_path: str) -> LabelStudioTask:
     return {
         "data": {
             "image": f"/data/local-files/?d={rel_img_path}",
@@ -63,7 +76,7 @@ def get_local_files_root(fallback: str | Path = "/") -> Path | None:
 def gen_tasks_for_local_images(
     images_dir: str | Path,
     image_formats: list[str] = [".jpg", ".png"],
-):
+) -> list[LabelStudioTask]:
     local_root = get_local_files_root()
     if local_root is None:
         raise RuntimeError(
@@ -96,3 +109,21 @@ def gen_tasks_for_local_images(
             ]
         tasks.append(task)
     return tasks
+
+
+def split_tasks(
+    tasks: list[LabelStudioTask],
+    num_splits_or_splitter: int | Callable[[LabelStudioTask], Hashable],
+) -> list[list[LabelStudioTask]]:
+    if isinstance(num_splits_or_splitter, int):
+        num_splits = num_splits_or_splitter
+        tasks_per_split = ceil(len(tasks) / num_splits)
+        return [
+            tasks[i * tasks_per_split : (i + 1) * tasks_per_split]
+            for i in range(num_splits)
+        ]
+    splitter = num_splits_or_splitter
+    groups = defaultdict(list)
+    for task in tasks:
+        groups[splitter(task)].append(task)
+    return list(groups.values())
