@@ -87,13 +87,16 @@ def _check_file_formats(fmts: list[str]) -> list[str]:
 def get_tasks_for_local_images(
     images_dir: str | Path,
     image_formats: list[str] = [".jpg", ".png"],
+    recurse_images_dir: bool = True,
 ) -> list[LabelStudioTask]:
     local_root = get_local_files_root()
     images_dir = Path(images_dir).resolve()
+    if not images_dir.is_relative_to(local_root):
+        raise ValueError(
+            f'"{images_dir}" is not part of the '
+            'local files root tree "{local_root}"'
+        )
     image_formats = _check_file_formats(image_formats)
-    images = [
-        img for img in images_dir.iterdir() if img.suffix in image_formats
-    ]
     classes_file = images_dir / "classes.txt"
     index_cls_map = (
         index_class_name_map_from_class_file(classes_file)
@@ -101,16 +104,24 @@ def get_tasks_for_local_images(
         else None
     )
     tasks = []
-    for img in images:
-        task = _get_task_for_local_image(img.relative_to(local_root).as_posix())
-        if index_cls_map is not None:
-            task["predictions"] = [
-                prediction_from_yolo_annotation(
-                    annotation_path=img.with_suffix(".txt"),
-                    index_cls_name_map=index_cls_map,
-                )
-            ]
-        tasks.append(task)
+    for fmt in image_formats:
+        for img in (
+            images_dir.rglob(f"*{fmt}")
+            if recurse_images_dir
+            else images_dir.glob(f"*{fmt}")
+        ):
+            task = _get_task_for_local_image(img.relative_to(local_root).as_posix())
+            if index_cls_map is not None:
+                try:
+                    task["predictions"] = [
+                        prediction_from_yolo_annotation(
+                            annotation_path=img.with_suffix(".txt"),
+                            index_cls_name_map=index_cls_map,
+                        )
+                    ]
+                except FileNotFoundError:
+                    pass
+            tasks.append(task)
     return tasks
 
 
