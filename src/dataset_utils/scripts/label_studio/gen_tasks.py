@@ -2,16 +2,16 @@ import argparse
 import json
 from pathlib import Path
 
-from dataset_utils.label_studio import get_tasks_for_local_images
+from dataset_utils.label_studio import gen_tasks_for_local_images
 
 
 def _run() -> int:
     try:
         parser = argparse.ArgumentParser(
             description=(
-                "Generate a Label Studio project (list of tasks) from the "
-                "configured local storage. Local files serving must be "
-                "enabled and configured."
+                "Generate Label Studio tasks for images in the local storage. "
+                "Local files serving must be enabled and configured. "
+                "Tasks are created in the local storage alongside the images."
             )
         )
         parser.add_argument(
@@ -26,18 +26,17 @@ def _run() -> int:
             ),
         )
         parser.add_argument(
-            "-s",
-            "--save_file",
-            type=str,
-            required=True,
-            help="Path to save the generated project as a JSON file.",
-        )
-        parser.add_argument(
-            "--img_fmts",
+            "--images_fmts",
             type=str,
             nargs="+",
             default=[".jpg", ".png"],
             help="Image formats to consider.",
+        )
+        parser.add_argument(
+            "-dr",
+            "--disable_recurse",
+            action="store_true",
+            help="Disable directory recursive search for images."
         )
         parser.add_argument(
             "--indentation",
@@ -45,25 +44,14 @@ def _run() -> int:
             default=2,
             help="Set JSON indentation size."
         )
-        parser.add_argument(
-            "-v",
-            "--verbose",
-            action="store_true",
-            help="Print the generated project in stdout.",
-        )
         args = parser.parse_args()
-        save_file = Path(args.save_file).resolve()
-        save_file.parent.mkdir(exist_ok=True, parents=True)
-        project = get_tasks_for_local_images(
-            images_dir=args.images_dir,
-            image_formats=args.img_fmts,
-        )
         indent = None if args.indentation < 1 else args.indentation
-        with save_file.open("w") as json_file:
-            json_string = json.dumps(obj=project, indent=indent)
-            json_file.write(json_string)
-            if args.verbose:
-                print(json_string)
+        gen_tasks_for_local_images(
+            images_dir=args.images_dir,
+            image_formats=args.images_fmts,
+            json_indentation=indent,
+            recurse_images_dir=(not args.disable_recurse),
+        )
         return 0
     except Exception:
         import traceback

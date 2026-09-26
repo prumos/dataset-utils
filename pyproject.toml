@@ -19,7 +19,7 @@ Issues = "https://github.com/prumos/dataset-utils/issues"
 label-studio = ["label-studio"]
 
 [project.scripts]
-gen-project = "dataset_utils.scripts.label_studio.gen_project:_run"
+gen-tasks = "dataset_utils.scripts.label_studio.gen_tasks:_run"
 
 
 [tool.setuptools.packages.find]
