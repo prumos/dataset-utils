@@ -25,7 +25,7 @@ def prediction_from_yolo_annotation(
     to_name_value: str = "image",
     type_value: str = "rectanglelabels",
     source_value: str = "$image",
-    model_version: str | None = None,
+    model_version: str  = "",
 ) -> LabelStudioPrediction:
     annotation = load_annotation(
         annotation_path,
