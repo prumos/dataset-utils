@@ -1,12 +1,12 @@
-from typing import TypedDict, Literal
 from pathlib import Path
+from typing import TypedDict, Literal
 
 
-type BoudingBox = tuple[int, int, int, int]
+type AbsoluteBoudingBox = tuple[int, int, int, int]
 type RelativeBoudingBox = tuple[float, float, float, float]
 
-class DetectionLabel(TypedDict):
-    bboxes: list[BoudingBox] | list[RelativeBoudingBox]
+class DetectionAnnotation(TypedDict):
+    bboxes: list[AbsoluteBoudingBox] | list[RelativeBoudingBox]
     labels: list[int] | list[str]
 
 
@@ -25,11 +25,13 @@ def load_annotation(
     format: Literal["tlbr", "tlwh", "xywh"] = "xywh",
     image_size: tuple[int, int] | None = None,
     index_cls_name_map: dict[int, str] | None = None,
-) -> DetectionLabel:
+) -> DetectionAnnotation:
     labels = []
     bboxes = []
     for line in Path(annotation_path).read_text().strip().splitlines():
         label, *coords = line.strip().split()
+        # YOLO format is: class id, x center, y center, width, height
+        # Coordinates and dimensions are normalized by image width and height
         x1, y1, x2, y2 = (float(coord) for coord in coords)
         if format == "tlwh":
             x1, y1 = (x1 - x2 / 2), (y1 - y2 / 2)

@@ -83,47 +83,6 @@ def _check_file_formats(fmts: list[str]) -> list[str]:
     )
 
 
-def get_tasks_for_local_images(
-    images_dir: str | Path,
-    image_formats: list[str] = [".jpg", ".png"],
-    recurse_images_dir: bool = True,
-) -> list[LabelStudioTask]:
-    local_root = get_local_files_root()
-    images_dir = Path(images_dir).resolve()
-    if not images_dir.is_relative_to(local_root):
-        raise ValueError(
-            f'"{images_dir}" is not part of the '
-            'local files root tree "{local_root}"'
-        )
-    image_formats = _check_file_formats(image_formats)
-    classes_file = images_dir / "classes.txt"
-    index_cls_map = (
-        load_index_class_map(classes_file)
-        if classes_file.is_file()
-        else None
-    )
-    tasks = []
-    for fmt in image_formats:
-        for img in (
-            images_dir.rglob(f"*{fmt}")
-            if recurse_images_dir
-            else images_dir.glob(f"*{fmt}")
-        ):
-            task = _get_task_for_local_image(img.relative_to(local_root).as_posix())
-            if index_cls_map is not None:
-                try:
-                    task["predictions"] = [
-                        prediction_from_yolo_annotation(
-                            annotation_path=img.with_suffix(".txt"),
-                            index_cls_name_map=index_cls_map,
-                        )
-                    ]
-                except FileNotFoundError:
-                    pass
-            tasks.append(task)
-    return tasks
-
-
 def gen_tasks_for_local_images(
     images_dir: str | Path,
     image_formats: list[str] = [".jpg", ".png"],
@@ -165,21 +124,3 @@ def gen_tasks_for_local_images(
             with img.with_suffix(".json").open("w") as task_file:
                 json.dump(obj=task, fp=task_file, indent=json_indentation)
     return
-
-
-def split_tasks(
-    tasks: list[LabelStudioTask],
-    num_splits_or_splitter: int | Callable[[LabelStudioTask], Hashable],
-) -> list[list[LabelStudioTask]]:
-    if isinstance(num_splits_or_splitter, int):
-        num_splits = num_splits_or_splitter
-        tasks_per_split = ceil(len(tasks) / num_splits)
-        return [
-            tasks[i * tasks_per_split : (i + 1) * tasks_per_split]
-            for i in range(num_splits)
-        ]
-    splitter = num_splits_or_splitter
-    groups = defaultdict(list)
-    for task in tasks:
-        groups[splitter(task)].append(task)
-    return list(groups.values())
