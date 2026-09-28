@@ -18,7 +18,7 @@ class LabelStudioTask(TypedDict):
 def prediction_from_yolo_annotation(
     annotation_path: str,
     index_cls_name_map: dict[int, str],
-    from_name_value: str = "labels",
+    from_name_value: str = "label",
     to_name_value: str = "image",
     type_value: str = "rectanglelabels",
     source_value: str = "$image",
