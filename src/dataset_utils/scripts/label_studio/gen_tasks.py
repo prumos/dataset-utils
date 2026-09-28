@@ -31,6 +31,13 @@ def _run() -> int:
             help="Image formats to consider.",
         )
         parser.add_argument(
+            "--classes",
+            type=str,
+            nargs="*",
+            default=None,
+            help="Targeted classes for generating the tasks.",
+        )
+        parser.add_argument(
             "--indent",
             type=int,
             default=None,
@@ -40,7 +47,9 @@ def _run() -> int:
         gen_tasks_for_local_images(
             images_dir=args.images_dir,
             image_fmts=args.fmts,
+            target_classes=args.classes,
             json_indentation=args.indent,
+            prepare_target_storage=True,
         )
         return 0
     except Exception:
