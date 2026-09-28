@@ -83,7 +83,7 @@ def check_file_formats(fmts: list[str]) -> list[str]:
 def gen_tasks_for_local_images(
     images_dir: str | Path,
     image_fmts: list[str] = [".jpg", ".png"],
-    json_indentation: int = 2,
+    json_indentation: int | None = 2,
     prepare_target_storage: bool = True,
 ) -> None:
     local_root = get_local_files_root()
@@ -94,7 +94,6 @@ def gen_tasks_for_local_images(
             'local files root tree "{local_root}"'
         )
     image_fmts = frozenset(check_file_formats(image_fmts))
-    json_indentation = None if json_indentation < 1 else json_indentation
     classes_file = images_dir / "classes.txt"
     index_cls_map = (
         load_index_class_map(classes_file)
