@@ -8,15 +8,15 @@ name = "dataset-utils"
 description = "Data and dataset utilities"
 version = "0.1.0"
 requires-python = ">=3.8,<3.13"
-dependencies = ["Pillow"]
+dependencies = [
+    "label-studio",
+    "Pillow",
+]
 readme = "README.md"
 
 [project.urls]
 Repository = "https://github.com/prumos/dataset-utils"
 Issues = "https://github.com/prumos/dataset-utils/issues"
-
-[project.optional-dependencies]
-label-studio = ["label-studio"]
 
 [project.scripts]
 gen-tasks = "dataset_utils.scripts.label_studio.gen_tasks:_run"
