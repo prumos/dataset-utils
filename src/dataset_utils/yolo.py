@@ -44,11 +44,14 @@ def load_annotation(
             y1, y2 = round(y1 * h), round(y2 * h)
         labels.append(int(label))
         bboxes.append((x1, y1, x2, y2))
-    return {
-        "labels": (
-            labels
-            if index_cls_name_map is None
-            else [index_cls_name_map[l] for l in labels]
-        ),
-        "bboxes": bboxes,
-    }
+    if index_cls_name_map is None:
+        return {"labels": labels, "bboxes": bboxes}
+    filtered_labels = []
+    filtered_bboxes = []
+    for label, bbox in zip(labels, bboxes):
+        try:
+            filtered_labels.append(index_cls_name_map[label])
+            filtered_bboxes.append(bbox)
+        except KeyError:
+            continue
+    return {"labels": filtered_labels, "bboxes": filtered_bboxes}
