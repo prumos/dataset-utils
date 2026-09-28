@@ -77,7 +77,7 @@ def get_local_files_root(fallback: str | Path = "/") -> Path:
     return Path(local_files_root).resolve()
 
 
-def _check_file_formats(fmts: list[str]) -> list[str]:
+def check_file_formats(fmts: list[str]) -> list[str]:
     return sorted(
         frozenset((fmt if fmt.startswith(".") else f".{fmt}") for fmt in fmts)
     )
@@ -85,9 +85,8 @@ def _check_file_formats(fmts: list[str]) -> list[str]:
 
 def gen_tasks_for_local_images(
     images_dir: str | Path,
-    image_formats: list[str] = [".jpg", ".png"],
+    image_fmts: list[str] = [".jpg", ".png"],
     json_indentation: int = 2,
-    recurse_images_dir: bool = True,
 ) -> None:
     local_root = get_local_files_root()
     images_dir = Path(images_dir).resolve()
@@ -96,7 +95,7 @@ def gen_tasks_for_local_images(
             f'"{images_dir}" is not part of the '
             'local files root tree "{local_root}"'
         )
-    image_formats = _check_file_formats(image_formats)
+    image_fmts = frozenset(check_file_formats(image_fmts))
     json_indentation = None if json_indentation < 1 else json_indentation
     classes_file = images_dir / "classes.txt"
     index_cls_map = (
@@ -104,23 +103,20 @@ def gen_tasks_for_local_images(
         if classes_file.is_file()
         else None
     )
-    for fmt in image_formats:
-        for img in (
-            images_dir.rglob(f"*{fmt}")
-            if recurse_images_dir
-            else images_dir.glob(f"*{fmt}")
-        ):
-            task = _get_task_for_local_image(img.relative_to(local_root).as_posix())
-            if index_cls_map is not None:
-                try:
-                    task["predictions"] = [
-                        prediction_from_yolo_annotation(
-                            annotation_path=img.with_suffix(".txt"),
-                            index_cls_name_map=index_cls_map,
-                        )
-                    ]
-                except FileNotFoundError:
-                    pass
-            with img.with_suffix(".json").open("w") as task_file:
-                json.dump(obj=task, fp=task_file, indent=json_indentation)
+    for img in (
+        item for item in images_dir.iterdir() if item.suffix in image_fmts
+    ):
+        task = _get_task_for_local_image(img.relative_to(local_root).as_posix())
+        if index_cls_map is not None:
+            try:
+                task["predictions"] = [
+                    prediction_from_yolo_annotation(
+                        annotation_path=img.with_suffix(".txt"),
+                        index_cls_name_map=index_cls_map,
+                    )
+                ]
+            except FileNotFoundError:
+                pass
+        with img.with_suffix(".json").open("w") as task_file:
+            json.dump(obj=task, fp=task_file, indent=json_indentation)
     return

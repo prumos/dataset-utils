@@ -1,6 +1,4 @@
 import argparse
-import json
-from pathlib import Path
 
 from dataset_utils.label_studio import gen_tasks_for_local_images
 
@@ -26,31 +24,23 @@ def _run() -> int:
             ),
         )
         parser.add_argument(
-            "--images_fmts",
+            "--fmts",
             type=str,
             nargs="+",
             default=[".jpg", ".png"],
             help="Image formats to consider.",
         )
         parser.add_argument(
-            "-dr",
-            "--disable_recurse",
-            action="store_true",
-            help="Disable directory recursive search for images."
-        )
-        parser.add_argument(
-            "--indentation",
+            "--indent",
             type=int,
-            default=2,
+            default=None,
             help="Set JSON indentation size."
         )
         args = parser.parse_args()
-        indent = None if args.indentation < 1 else args.indentation
         gen_tasks_for_local_images(
             images_dir=args.images_dir,
-            image_formats=args.images_fmts,
-            json_indentation=indent,
-            recurse_images_dir=(not args.disable_recurse),
+            image_fmts=args.fmts,
+            json_indentation=args.indent,
         )
         return 0
     except Exception:
