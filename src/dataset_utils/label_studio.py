@@ -18,7 +18,8 @@ class LabelStudioTask(TypedDict):
 def prediction_from_yolo_annotation(
     annotation_path: str,
     index_cls_name_map: dict[int, str],
-    target_classes: list[str] | None = None,
+    include_classes: list[str] | None = None,
+    exclude_classes: list[str] | None = None,
     from_name_value: str = "label",
     to_name_value: str = "image",
     type_value: str = "rectanglelabels",
@@ -30,9 +31,11 @@ def prediction_from_yolo_annotation(
         format="tlwh",
         index_cls_name_map=index_cls_name_map,
     )
-    target_classes = frozenset(
-        annotation["labels"] if target_classes is None else target_classes
-    )
+    target_classes = frozenset(annotation["labels"])
+    if include_classes is not None:
+        target_classes = target_classes.intersection(include_classes)
+    if exclude_classes is not None:
+        target_classes = target_classes.difference(exclude_classes)
     return {
         "model_version": model_version,
         "result": [
@@ -89,7 +92,8 @@ def gen_tasks_for_local_images(
     images_dir: str | Path,
     image_fmts: list[str] = [".jpg", ".png"],
     recurse_dir: bool = False,
-    target_classes: list[str] | None = None,
+    include_classes: list[str] | None = None,
+    exclude_classes: list[str] | None = None,
     json_indentation: int | None = 2,
     prepare_target_storage: bool = True,
 ) -> None:
@@ -125,7 +129,8 @@ def gen_tasks_for_local_images(
                         prediction_from_yolo_annotation(
                             annotation_path=img.with_suffix(".txt"),
                             index_cls_name_map=index_cls_map,
-                            target_classes=target_classes,
+                            include_classes=include_classes,
+                            exclude_classes=exclude_classes,
                         )
                     ]
                 except FileNotFoundError:

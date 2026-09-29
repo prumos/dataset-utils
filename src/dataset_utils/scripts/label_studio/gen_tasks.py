@@ -36,11 +36,24 @@ def _run() -> int:
             help="Recurse subdirectories in the file tree.",
         )
         parser.add_argument(
-            "--classes",
+            "--include",
             type=str,
             nargs="*",
             default=None,
-            help="Targeted classes for generating the tasks.",
+            help=(
+                "Classes to INCLUDE in the tasks "
+                "if YOLO predictions are available."
+            ),
+        )
+        parser.add_argument(
+            "--exclude",
+            type=str,
+            nargs="*",
+            default=None,
+            help=(
+                "Classes to EXCLUDE from the tasks "
+                "if YOLO predictions are available."
+            ),
         )
         parser.add_argument(
             "--indent",
@@ -53,7 +66,8 @@ def _run() -> int:
             images_dir=args.images_dir,
             image_fmts=args.fmts,
             recurse_dir=args.recurse,
-            target_classes=args.classes,
+            include_classes=args.include,
+            exclude_classes=args.exclude,
             json_indentation=args.indent,
             prepare_target_storage=True,
         )
