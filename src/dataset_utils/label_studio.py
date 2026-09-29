@@ -95,7 +95,7 @@ def gen_tasks_for_local_images(
     include_classes: list[str] | None = None,
     exclude_classes: list[str] | None = None,
     json_indentation: int | None = 2,
-    prepare_target_storage: bool = True,
+    prepare_target_storage: bool = False,
 ) -> None:
     local_root = get_local_files_root()
     images_dir = Path(images_dir).resolve()

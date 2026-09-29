@@ -69,7 +69,6 @@ def _run() -> int:
             include_classes=args.include,
             exclude_classes=args.exclude,
             json_indentation=args.indent,
-            prepare_target_storage=True,
         )
         return 0
     except Exception:
