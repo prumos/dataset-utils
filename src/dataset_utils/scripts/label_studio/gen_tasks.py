@@ -31,6 +31,11 @@ def _run() -> int:
             help="Image formats to consider.",
         )
         parser.add_argument(
+            "--recurse",
+            action="store_true",
+            help="Recurse subdirectories in the file tree.",
+        )
+        parser.add_argument(
             "--classes",
             type=str,
             nargs="*",
@@ -47,6 +52,7 @@ def _run() -> int:
         gen_tasks_for_local_images(
             images_dir=args.images_dir,
             image_fmts=args.fmts,
+            recurse_dir=args.recurse,
             target_classes=args.classes,
             json_indentation=args.indent,
             prepare_target_storage=True,

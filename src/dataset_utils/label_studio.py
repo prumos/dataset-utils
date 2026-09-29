@@ -88,6 +88,7 @@ def check_file_formats(fmts: list[str]) -> list[str]:
 def gen_tasks_for_local_images(
     images_dir: str | Path,
     image_fmts: list[str] = [".jpg", ".png"],
+    recurse_dir: bool = False,
     target_classes: list[str] | None = None,
     json_indentation: int | None = 2,
     prepare_target_storage: bool = True,
@@ -100,32 +101,40 @@ def gen_tasks_for_local_images(
             'local files root tree "{local_root}"'
         )
     image_fmts = frozenset(check_file_formats(image_fmts))
-    classes_file = images_dir / "classes.txt"
-    index_cls_map = (
-        load_index_class_map(classes_file)
-        if classes_file.is_file()
-        else None
+    target_dirs = (
+        [Path(step[0]) for step in os.walk(images_dir)]
+        if recurse_dir
+        else [images_dir]
     )
-    for img in (
-        item for item in images_dir.iterdir() if item.suffix in image_fmts
-    ):
-        task = _get_task_for_local_image(img.relative_to(local_root).as_posix())
-        if index_cls_map is not None:
-            try:
-                task["predictions"] = [
-                    prediction_from_yolo_annotation(
-                        annotation_path=img.with_suffix(".txt"),
-                        index_cls_name_map=index_cls_map,
-                        target_classes=target_classes,
-                    )
-                ]
-            except FileNotFoundError:
-                pass
-        with img.with_suffix(".json").open("w") as task_file:
-            json.dump(obj=task, fp=task_file, indent=json_indentation)
-    if prepare_target_storage:
-        target_storage = Path(
-            images_dir.as_posix().replace("/images/", "/annotations/", 1)
+    for images_dir in target_dirs:
+        classes_file = images_dir / "classes.txt"
+        index_cls_map = (
+            load_index_class_map(classes_file)
+            if classes_file.is_file()
+            else None
         )
-        target_storage.mkdir(parents=True, exist_ok=True)
+        for img in (
+            item for item in images_dir.iterdir() if item.suffix in image_fmts
+        ):
+            task = _get_task_for_local_image(
+                img.relative_to(local_root).as_posix()
+            )
+            if index_cls_map is not None:
+                try:
+                    task["predictions"] = [
+                        prediction_from_yolo_annotation(
+                            annotation_path=img.with_suffix(".txt"),
+                            index_cls_name_map=index_cls_map,
+                            target_classes=target_classes,
+                        )
+                    ]
+                except FileNotFoundError:
+                    pass
+            with img.with_suffix(".json").open("w") as task_file:
+                json.dump(obj=task, fp=task_file, indent=json_indentation)
+        if prepare_target_storage:
+            target_storage = Path(
+                images_dir.as_posix().replace("/images/", "/annotations/", 1)
+            )
+            target_storage.mkdir(parents=True, exist_ok=True)
     return
