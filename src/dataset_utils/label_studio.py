@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import NotRequired, TypedDict, Any
 
-from dataset_utils.yolo import load_annotation, load_index_class_map
+from dataset_utils import yolo
 
 
 type LabelStudioPrediction = dict[str, Any]
@@ -26,7 +26,7 @@ def prediction_from_yolo_annotation(
     source_value: str = "$image",
     model_version: str  = "",
 ) -> LabelStudioPrediction:
-    annotation = load_annotation(
+    annotation = yolo.load_detection_annotation(
         annotation_path,
         format="tlwh",
         index_cls_name_map=index_cls_name_map,
@@ -113,7 +113,7 @@ def gen_tasks_for_local_images(
     for images_dir in target_dirs:
         classes_file = images_dir / "classes.txt"
         index_cls_map = (
-            load_index_class_map(classes_file)
+            yolo.load_index_class_map(classes_file)
             if classes_file.is_file()
             else None
         )
@@ -143,3 +143,37 @@ def gen_tasks_for_local_images(
             )
             target_storage.mkdir(parents=True, exist_ok=True)
     return
+
+
+def yolo_detections_from_task(
+    task: LabelStudioTask,
+) -> list[yolo.DetectionBoundingBoxes] | None:
+    try:
+        annotations = task["annotations"]
+    except KeyError:
+        return None
+    detections = []
+    for ann in annotations:
+        labels = []
+        bboxes = []
+        for json_bbox in ann["result"]:
+            json_bbox = json_bbox["value"]
+            try:
+                labels.append(json_bbox["rectanglelabels"][0])
+            except KeyError:
+                continue
+            width = json_bbox["width"] / 100
+            height = json_bbox["height"] / 100
+            bboxes.append(
+                json_bbox["x"] / 100 + width / 2,
+                json_bbox["y"] / 100 + height / 2,
+                width,
+                height,
+            )
+        detections.append({"bboxes": bboxes, "labels": labels})
+    return detections
+
+
+def load_json_project(project_path: str | Path) -> list[LabelStudioTask]:
+    with open(project_path, mode="r") as json_project:
+        return json.load(json_project)

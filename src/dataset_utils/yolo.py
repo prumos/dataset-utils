@@ -5,7 +5,7 @@ from typing import TypedDict, Literal
 type AbsoluteBoudingBox = tuple[int, int, int, int]
 type RelativeBoudingBox = tuple[float, float, float, float]
 
-class DetectionAnnotation(TypedDict):
+class DetectionBoundingBoxes(TypedDict):
     bboxes: list[AbsoluteBoudingBox] | list[RelativeBoudingBox]
     labels: list[int] | list[str]
 
@@ -20,12 +20,12 @@ def load_index_class_map(classes_file: str | Path) -> dict[int, str]:
     return index_class_map
 
 
-def load_annotation(
+def load_detection_annotation(
     annotation_path: str | Path,
     format: Literal["tlbr", "tlwh", "xywh"] = "xywh",
     image_size: tuple[int, int] | None = None,
     index_cls_name_map: dict[int, str] | None = None,
-) -> DetectionAnnotation:
+) -> DetectionBoundingBoxes:
     labels = []
     bboxes = []
     for line in Path(annotation_path).read_text().strip().splitlines():
