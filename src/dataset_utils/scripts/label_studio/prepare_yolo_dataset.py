@@ -21,17 +21,17 @@ def prepare_yolo_dataset(
 ):
     image_detection_map = {}
     local_files_prefix = "/data/local-files/?d=images/"
-    local_files_root = None
+    local_imgs_dir = None
     classes = set()
     for task in tasks:
         data_image: str = task["data"]["image"]
         if data_image.startswith(local_files_prefix):
             data_image = data_image.removeprefix(local_files_prefix)
             try:
-                image_path = local_files_root / data_image
+                image_path = local_imgs_dir / data_image
             except TypeError:
-                local_files_root = label_studio.get_local_files_root()
-                image_path = local_files_root / data_image
+                local_imgs_dir = label_studio.get_local_files_root() / "images"
+                image_path = local_imgs_dir / data_image
         else:
             image_path = Path(data_image)
         try:
@@ -55,6 +55,7 @@ def prepare_yolo_dataset(
         train_split.extend(splits[0])
         valid_split.extend(splits[1])
         test_split.extend(splits[2])
+    save_dir = save_dir.resolve()
     save_dir.mkdir(parents=True, exist_ok=True)
     images_dir = save_dir / "images"
     images_dir.mkdir(exist_ok=True)
