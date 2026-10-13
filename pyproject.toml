@@ -11,6 +11,7 @@ requires-python = ">=3.8,<3.13"
 dependencies = [
     "label-studio",
     "Pillow",
+    "pyyaml",
 ]
 readme = "README.md"
 

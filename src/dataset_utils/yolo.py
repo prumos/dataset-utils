@@ -55,3 +55,16 @@ def load_detection_annotation(
         except KeyError:
             continue
     return {"labels": filtered_labels, "bboxes": filtered_bboxes}
+
+
+def write_detection_to_annotation(
+    detection: DetectionBoundingBoxes,
+    ann_path: str | Path,
+):
+    lines = [
+        f"{label} {x1} {y1} {x2} {y2}\n"
+        for label, (x1, y1, x2, y2)
+        in zip(detection["labels"], detection["bboxes"])
+    ]
+    with open(ann_path, "w") as ann_file:
+        ann_file.writelines(lines)

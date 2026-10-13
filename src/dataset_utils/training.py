@@ -23,9 +23,9 @@ def check_ratios(ratios: list[float]):
 
 
 def sequential_split(
-    items: Sequence[str],
+    items: Sequence[T],
     ratios: Sequence[float],
-) -> list[list[str]]:
+) -> list[list[T]]:
     check_ratios(ratios)
     total_items = len(items)
     exact_counts = [total_items * ratio for ratio in ratios]
