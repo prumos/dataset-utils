@@ -21,6 +21,7 @@ Issues = "https://github.com/prumos/dataset-utils/issues"
 
 [project.scripts]
 gen-tasks = "dataset_utils.scripts.label_studio.gen_tasks:_run"
+prepare-yolo-dataset = "dataset_utils.scripts.label_studio.prepare_yolo_dataset:_run"
 
 
 [tool.setuptools.packages.find]
