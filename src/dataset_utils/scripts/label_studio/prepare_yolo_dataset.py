@@ -61,22 +61,8 @@ def prepare_yolo_dataset(
     images_dir.mkdir(exist_ok=True)
     labels_dir = save_dir / "labels"
     labels_dir.mkdir(exist_ok=True)
-    # Dataset YAML metadate
-    dataset_metadata = {
-        "path": save_dir.as_posix(),
-        "train": (images_dir / "train").relative_to(save_dir).as_posix(),
-        "val": (images_dir / "valid").relative_to(save_dir).as_posix(),
-        "test": (images_dir / "test").relative_to(save_dir).as_posix(),
-        "names": {i: class_name for i, class_name in enumerate(classes)},
-    }
-    with (save_dir / f"{save_dir.name}.yaml").open("w") as metadata_yaml:
-        yaml.dump(
-            data=dataset_metadata,
-            stream=metadata_yaml,
-            indent=2,
-            sort_keys=False,
-        )
     # Save dataset locally
+    dataset_metadata = {"path": save_dir.as_posix()}
     class_index_map = {cls_name: i for i, cls_name in enumerate(classes)}
     for split, split_images in zip(
         ("train", "valid", "test"),
@@ -86,6 +72,10 @@ def prepare_yolo_dataset(
         images_split_dir.mkdir(exist_ok=True)
         labels_split_dir = labels_dir / split
         labels_split_dir.mkdir(exist_ok=True)
+        if split_images:
+            dataset_metadata[split if split != "valid" else "val"] = (
+                images_split_dir.relative_to(save_dir).as_posix()
+            )
         for image_path in split_images:
             detection = image_detection_map[image_path]
             detection["labels"] = [
@@ -96,6 +86,17 @@ def prepare_yolo_dataset(
                 detection=detection,
                 ann_path=labels_split_dir / f"{image_path.stem}.txt",
             )
+    # Save dataset metadate as YAML
+    dataset_metadata["names"] = {
+        i: class_name for i, class_name in enumerate(classes)
+    }
+    with (save_dir / f"{save_dir.name}.yaml").open("w") as metadata_yaml:
+        yaml.dump(
+            data=dataset_metadata,
+            stream=metadata_yaml,
+            indent=2,
+            sort_keys=False,
+        )
     return
 
 
