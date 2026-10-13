@@ -145,13 +145,6 @@ def _get_args_parser() -> argparse.ArgumentParser:
         default=0.15,
         help="Ratio of the valid split/set.",
     )
-    parser.add_argument(
-        "-tr",
-        "--test_ratio",
-        type=float,
-        default=0.15,
-        help="Ratio of the test split/set.",
-    )
     return parser
 
 
@@ -166,7 +159,7 @@ def _run():
             tasks=tasks,
             train_ratio=args.train_ratio,
             valid_ratio=args.valid_ratio,
-            test_ratio=args.test_ratio,
+            test_ratio=(1.0 - args.train_ratio - args.valid_ratio),
             save_dir=(args.save_dir / args.name),
         )
         return 0
