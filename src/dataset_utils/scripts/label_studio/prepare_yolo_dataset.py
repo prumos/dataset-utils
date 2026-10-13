@@ -70,9 +70,14 @@ def prepare_yolo_dataset(
         "names": {i: class_name for i, class_name in enumerate(classes)},
     }
     with (save_dir / f"{save_dir.name}.yaml").open("w") as metadata_yaml:
-        yaml.dump(data=dataset_metadata, stream=metadata_yaml, indent=2)
+        yaml.dump(
+            data=dataset_metadata,
+            stream=metadata_yaml,
+            indent=2,
+            sort_keys=False,
+        )
     # Save dataset locally
-    class_index_map = {cls_name: i for i, cls_name in classes}
+    class_index_map = {cls_name: i for i, cls_name in enumerate(classes)}
     for split, split_images in zip(
         ("train", "valid", "test"),
         (train_split, valid_split, test_split),

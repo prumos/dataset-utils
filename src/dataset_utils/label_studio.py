@@ -165,10 +165,12 @@ def yolo_detections_from_task(
             width = json_bbox["width"] / 100
             height = json_bbox["height"] / 100
             bboxes.append(
-                json_bbox["x"] / 100 + width / 2,
-                json_bbox["y"] / 100 + height / 2,
-                width,
-                height,
+                (
+                    json_bbox["x"] / 100 + width / 2,
+                    json_bbox["y"] / 100 + height / 2,
+                    width,
+                    height,
+                )
             )
         detections.append({"bboxes": bboxes, "labels": labels})
     return detections
