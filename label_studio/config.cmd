@@ -72,7 +72,10 @@ if not exist "%BASE_DIR%\" (
 
 if not exist "%BASE_DIR%\label_studio\local_store" (
     mkdir "%BASE_DIR%\label_studio\local_store\images" || goto mkdir_error
-    mkdir "%BASE_DIR%\label_studio\local_store\annotations" || goto mkdir_error
+)
+
+if not exist "%BASE_DIR%\label_studio\projects" (
+    mkdir "%BASE_DIR%\label_studio\projects" || goto mkdir_error
 )
 
 set "BASE_DIR=%BASE_DIR:\=\\%"
