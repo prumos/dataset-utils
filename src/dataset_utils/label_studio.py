@@ -68,9 +68,12 @@ def _get_task_for_local_image(rel_img_path: str) -> LabelStudioTask:
     }
 
 
-def get_local_files_root(fallback: str | Path = "/") -> Path:
+def get_local_files_root(
+    fallback: str | Path = "./",
+    enforce_fallback: bool = False,
+) -> Path:
     enabled = os.environ.get("LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED", "")
-    if enabled != "true":
+    if enabled != "true" and not enforce_fallback:
         raise RuntimeError(
             "Local file serving is not enabled. "
             'Set "LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED" to "true" and '
