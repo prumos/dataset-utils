@@ -6,6 +6,8 @@ from typing import NotRequired, TypedDict, Any
 from dataset_utils import yolo
 
 
+LOCAL_FILES_PREFIX = "/data/local-files/?d="
+
 type LabelStudioPrediction = dict[str, Any]
 type LabelStudioAnnotation = dict[str, Any]
 
@@ -61,7 +63,7 @@ def prediction_from_yolo_annotation(
 def _get_task_for_local_image(rel_img_path: str) -> LabelStudioTask:
     return {
         "data": {
-            "image": f"/data/local-files/?d={rel_img_path}",
+            "image": f"{LOCAL_FILES_PREFIX}{rel_img_path}",
         }
     }
 

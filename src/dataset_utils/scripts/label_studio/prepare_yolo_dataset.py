@@ -20,13 +20,14 @@ def prepare_yolo_dataset(
     save_dir: Path,
 ):
     image_detection_map = {}
-    local_files_prefix = "/data/local-files/?d=images/"
     local_imgs_dir = None
     classes = set()
     for task in tasks:
         data_image: str = task["data"]["image"]
-        if data_image.startswith(local_files_prefix):
-            data_image = data_image.removeprefix(local_files_prefix)
+        if data_image.startswith(label_studio.LOCAL_FILES_PREFIX):
+            data_image = data_image.removeprefix(
+                label_studio.LOCAL_FILES_PREFIX
+            )
             try:
                 image_path = local_imgs_dir / data_image
             except TypeError:
