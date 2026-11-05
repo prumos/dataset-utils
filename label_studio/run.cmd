@@ -1,6 +1,7 @@
 @echo off
 setlocal
 
+
 set "BASE_DIR=%CD%"
 set "HOST_URL="
 
@@ -19,9 +20,14 @@ echo Usage: %~nx0 [-b ^| --base-dir DIR] [--host HOSTNAME] >&2
 exit /b 1
 
 
+:help
+echo Usage: %~nx0 [-b ^| --base-dir DIR] [--host HOSTNAME]
+exit /b 0
+
+
 :base_dir
 if "%~2"=="" (
-    echo Error: %~1 requires a directory argument. >&2
+    echo Error: %~1 requires a directory path argument. >&2
     exit /b 1
 )
 
@@ -48,6 +54,7 @@ echo Failed to create Label Studio directory tree in "%BASE_DIR%". >&2
 exit /b 1
 
 
+:: Configure environment variables
 :configure
 if defined HOST_URL (
     echo(%HOST_URL%| findstr /r /i /b /c:"http://" /c:"https://" >nul
@@ -78,12 +85,10 @@ if not exist "%BASE_DIR%\label_studio\projects" (
     mkdir "%BASE_DIR%\label_studio\projects" || goto mkdir_error
 )
 
-set "BASE_DIR=%BASE_DIR:\=\\%"
-
 set "LABEL_STUDIO_PORT=8080"
-set "LABEL_STUDIO_BASE_DATA_DIR=%BASE_DIR%\\label_studio\\app"
+set "LABEL_STUDIO_BASE_DATA_DIR=%BASE_DIR:\=\\%\\label_studio\\app"
 set "LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true"
-set "LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=%BASE_DIR%\\label_studio\\local_store"
+set "LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=%BASE_DIR:\=\\%\\label_studio\\local_store"
 
 echo Label Studio environment configured:
 echo   LABEL_STUDIO_BASE_DATA_DIR=%LABEL_STUDIO_BASE_DATA_DIR%
@@ -96,6 +101,7 @@ if defined HOST_URL (
 )
 
 endlocal & (
+    set "LABEL_STUDIO_BASE_DIR=%BASE_DIR%"
     set "LABEL_STUDIO_BASE_DATA_DIR=%LABEL_STUDIO_BASE_DATA_DIR%"
     set "LABEL_STUDIO_PORT=%LABEL_STUDIO_PORT%"
     set "LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=%LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED%"
@@ -103,9 +109,17 @@ endlocal & (
     set "LABEL_STUDIO_HOST=%HOST_URL%"
     set "CSRF_TRUSTED_ORIGINS=%HOST_URL%"
 )
-exit /b 0
 
 
-:help
-echo Usage: %~nx0 [-b ^| --base-dir DIR] [--host HOSTNAME]
+:: Activate Python virtual environment
+if not defined VIRTUAL_ENV (
+    echo %LABEL_STUDIO_BASE_DIR%\venv\Scripts\activate.bat
+    call "%LABEL_STUDIO_BASE_DIR%\venv\Scripts\activate.bat"
+)
+
+
+:: Start Label Studio
+label-studio start
+
+
 exit /b 0
