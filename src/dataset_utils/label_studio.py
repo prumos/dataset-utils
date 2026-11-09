@@ -100,7 +100,6 @@ def gen_tasks_for_local_images(
     include_classes: list[str] | None = None,
     exclude_classes: list[str] | None = None,
     json_indentation: int | None = 2,
-    prepare_target_storage: bool = False,
 ) -> None:
     local_root = get_local_files_root()
     images_dir = Path(images_dir).resolve()
@@ -142,11 +141,6 @@ def gen_tasks_for_local_images(
                     pass
             with img.with_suffix(".json").open("w") as task_file:
                 json.dump(obj=task, fp=task_file, indent=json_indentation)
-        if prepare_target_storage:
-            target_storage = Path(
-                images_dir.as_posix().replace("/images/", "/annotations/", 1)
-            )
-            target_storage.mkdir(parents=True, exist_ok=True)
     return
 
 
