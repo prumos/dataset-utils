@@ -19,7 +19,7 @@ class LabelStudioTask(TypedDict):
 
 def prediction_from_yolo_annotation(
     annotation_path: str,
-    index_cls_name_map: dict[int, str],
+    index_name_map: dict[int, str],
     include_classes: list[str] | None = None,
     exclude_classes: list[str] | None = None,
     from_name_value: str = "label",
@@ -31,7 +31,7 @@ def prediction_from_yolo_annotation(
     annotation = yolo.load_detection_annotation(
         annotation_path,
         format="tlwh",
-        index_cls_name_map=index_cls_name_map,
+        index_name_map=index_name_map,
     )
     target_classes = frozenset(annotation["labels"])
     if include_classes is not None:
@@ -116,8 +116,8 @@ def gen_tasks_for_local_images(
     )
     for images_dir in target_dirs:
         classes_file = images_dir / "classes.txt"
-        index_cls_map = (
-            yolo.load_index_class_map(classes_file)
+        index_name_map = (
+            yolo.load_index_name_map(classes_file)
             if classes_file.is_file()
             else None
         )
@@ -127,12 +127,12 @@ def gen_tasks_for_local_images(
             task = _get_task_for_local_image(
                 img.relative_to(local_root).as_posix()
             )
-            if index_cls_map is not None:
+            if index_name_map is not None:
                 try:
                     task["predictions"] = [
                         prediction_from_yolo_annotation(
                             annotation_path=img.with_suffix(".txt"),
-                            index_cls_name_map=index_cls_map,
+                            index_name_map=index_name_map,
                             include_classes=include_classes,
                             exclude_classes=exclude_classes,
                         )

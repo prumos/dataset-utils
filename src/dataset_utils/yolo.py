@@ -10,21 +10,21 @@ class DetectionBoundingBoxes(TypedDict):
     labels: list[int] | list[str]
 
 
-def load_index_class_map(classes_file: str | Path) -> dict[int, str]:
-    index_class_map = {
+def load_index_name_map(classes_file: str | Path) -> dict[int, str]:
+    index_name_map = {
         i: class_name.strip()
         for i, class_name in enumerate(
             Path(classes_file).read_text().strip().splitlines()
         )
     }
-    return index_class_map
+    return index_name_map
 
 
 def load_detection_annotation(
     annotation_path: str | Path,
     format: Literal["tlbr", "tlwh", "xywh"] = "xywh",
     image_size: tuple[int, int] | None = None,
-    index_cls_name_map: dict[int, str] | None = None,
+    index_name_map: dict[int, str] | None = None,
 ) -> DetectionBoundingBoxes:
     labels = []
     bboxes = []
@@ -44,13 +44,13 @@ def load_detection_annotation(
             y1, y2 = round(y1 * h), round(y2 * h)
         labels.append(int(label))
         bboxes.append((x1, y1, x2, y2))
-    if index_cls_name_map is None:
+    if index_name_map is None:
         return {"labels": labels, "bboxes": bboxes}
     filtered_labels = []
     filtered_bboxes = []
     for label, bbox in zip(labels, bboxes):
         try:
-            filtered_labels.append(index_cls_name_map[label])
+            filtered_labels.append(index_name_map[label])
             filtered_bboxes.append(bbox)
         except KeyError:
             continue
