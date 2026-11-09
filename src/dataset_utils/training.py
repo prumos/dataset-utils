@@ -1,16 +1,7 @@
 import math
-from typing import TypeVar, Protocol
-from collections.abc import Sequence
+from typing import TypeVar
 
 T = TypeVar("T")
-
-class Splitter(Protocol[T]):
-    def __call__(
-        self,
-        items: Sequence[T],
-        ratios: Sequence[float],
-    ) -> list[list[T]]:
-        ...
 
 
 def check_ratios(ratios: list[float]):
@@ -23,8 +14,8 @@ def check_ratios(ratios: list[float]):
 
 
 def sequential_split(
-    items: Sequence[T],
-    ratios: Sequence[float],
+    items: list[T],
+    ratios: list[float],
 ) -> list[list[T]]:
     check_ratios(ratios)
     total_items = len(items)
