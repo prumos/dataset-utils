@@ -15,6 +15,9 @@ dependencies = [
 ]
 readme = "README.md"
 
+[project.optional-dependencies]
+dev = ["ruff"]
+
 [project.urls]
 Repository = "https://github.com/prumos/dataset-utils"
 Issues = "https://github.com/prumos/dataset-utils/issues"
