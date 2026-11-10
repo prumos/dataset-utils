@@ -1,9 +1,9 @@
 import os
 import json
 from pathlib import Path
-from typing import NotRequired, TypedDict, Any
+from typing import Any, NotRequired, TypedDict
 
-from dataset_utils import yolo
+from dataset_utils import detection_utils, yolo
 
 
 LOCAL_FILES_PREFIX = "/data/local-files/?d="
@@ -17,23 +17,21 @@ class LabelStudioTask(TypedDict):
     predictions: NotRequired[list[LabelStudioPrediction]]
 
 
-def prediction_from_yolo_annotation(
-    annotation_path: str,
+def prediction_from_yolo_detection(
+    annotation_file: str,
     index_name_map: dict[int, str],
     include_classes: list[str] | None = None,
     exclude_classes: list[str] | None = None,
     from_name_value: str = "label",
     to_name_value: str = "image",
-    type_value: str = "rectanglelabels",
     source_value: str = "$image",
     model_version: str  = "",
 ) -> LabelStudioPrediction:
-    annotation = yolo.load_detection_annotation(
-        annotation_path,
-        format="tlwh",
+    yolo_detection = yolo.load_detection_annotation(
+        annotation_file,
         index_name_map=index_name_map,
     )
-    target_classes = frozenset(annotation["labels"])
+    target_classes = frozenset(yolo_detection["labels"])
     if include_classes is not None:
         target_classes = target_classes.intersection(include_classes)
     if exclude_classes is not None:
@@ -44,17 +42,20 @@ def prediction_from_yolo_annotation(
             {
                 "from_name": from_name_value,
                 "to_name": to_name_value,
-                "type": type_value,
+                "type": "rectanglelabels",
                 "source": source_value,
                 "value": {
                     "rectanglelabels": [label],
-                    "x": bbox[0] * 100.0,
-                    "y": bbox[1] * 100.0,
+                    "x": (bbox[0] - bbox[2] / 2) * 100.0,
+                    "y": (bbox[1] - bbox[3] / 2) * 100.0,
                     "width": bbox[2] * 100.0,
                     "height": bbox[3] * 100.0,
                 }
             }
-            for label, bbox in zip(annotation["labels"], annotation["bboxes"])
+            for label, bbox in zip(
+                yolo_detection["labels"],
+                yolo_detection["bboxes"],
+            )
             if label in target_classes
         ]
     }
@@ -130,8 +131,8 @@ def gen_tasks_for_local_images(
             if index_name_map is not None:
                 try:
                     task["predictions"] = [
-                        prediction_from_yolo_annotation(
-                            annotation_path=img.with_suffix(".txt"),
+                        prediction_from_yolo_detection(
+                            annotation_file=img.with_suffix(".txt"),
                             index_name_map=index_name_map,
                             include_classes=include_classes,
                             exclude_classes=exclude_classes,
@@ -144,34 +145,34 @@ def gen_tasks_for_local_images(
     return
 
 
-def yolo_detections_from_task(
+def detections_from_task(
     task: LabelStudioTask,
-) -> list[yolo.DetectionBoundingBoxes] | None:
-    try:
-        annotations = task["annotations"]
-    except KeyError:
-        return None
+) -> list[detection_utils.DetectionBoudingBoxes] | None:
     detections = []
-    for ann in annotations:
+    for annotation in task.get("annotations", []):
         labels = []
         bboxes = []
-        for json_bbox in ann["result"]:
-            json_bbox = json_bbox["value"]
-            try:
-                labels.append(json_bbox["rectanglelabels"][0])
-            except KeyError:
+        width = 1
+        height = 1
+        for ann_result in annotation["result"]:
+            if ann_result["type"] != "rectanglelabels":
                 continue
-            width = json_bbox["width"] / 100
-            height = json_bbox["height"] / 100
-            bboxes.append(
-                (
-                    json_bbox["x"] / 100 + width / 2,
-                    json_bbox["y"] / 100 + height / 2,
-                    width,
-                    height,
-                )
-            )
-        detections.append({"bboxes": bboxes, "labels": labels})
+            width = ann_result.get("original_width", width)
+            height = ann_result.get("original_height", height)
+            json_bbox = ann_result["value"]
+            w = width * max(0.0, min(1.0, json_bbox["width"] / 100))
+            h = height * max(0.0, min(1.0, json_bbox["height"] / 100))
+            x = w / 2 + (width * max(0.0, min(1.0, json_bbox["x"] / 100)))
+            y = h / 2 + (height * max(0.0, min(1.0, json_bbox["y"] / 100)))
+            labels.append(json_bbox["rectanglelabels"][0])
+            bboxes.append((x, y, w, h))
+        detections.append(
+            {
+                "bboxes": bboxes,
+                "labels": labels,
+                "canvas_size": (width, height),
+            }
+        )
     return detections
 
 

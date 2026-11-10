@@ -1,13 +1,11 @@
 from pathlib import Path
-from typing import TypedDict, Literal
+from typing import TypedDict, NotRequired
 
 
-type AbsoluteBoudingBox = tuple[int, int, int, int]
-type RelativeBoudingBox = tuple[float, float, float, float]
-
-class DetectionBoundingBoxes(TypedDict):
-    bboxes: list[AbsoluteBoudingBox] | list[RelativeBoudingBox]
-    labels: list[int] | list[str]
+class YOLODetection(TypedDict):
+    bboxes: tuple[float, float, float, float]
+    indexes: list[int]
+    labels: NotRequired[list[str]]
 
 
 def load_index_name_map(classes_file: str | Path) -> dict[int, str]:
@@ -21,50 +19,38 @@ def load_index_name_map(classes_file: str | Path) -> dict[int, str]:
 
 
 def load_detection_annotation(
-    annotation_path: str | Path,
-    format: Literal["tlbr", "tlwh", "xywh"] = "xywh",
-    image_size: tuple[int, int] | None = None,
+    annotation_file: str | Path,
     index_name_map: dict[int, str] | None = None,
-) -> DetectionBoundingBoxes:
-    labels = []
+) -> YOLODetection:
+    indexes = []
     bboxes = []
-    for line in Path(annotation_path).read_text().strip().splitlines():
+    for line in Path(annotation_file).read_text().strip().splitlines():
         label, *coords = line.strip().split()
         # YOLO format is: class id, x center, y center, width, height
         # Coordinates and dimensions are normalized by image width and height
-        x1, y1, x2, y2 = (float(coord) for coord in coords)
-        if format == "tlwh":
-            x1, y1 = (x1 - x2 / 2), (y1 - y2 / 2)
-        if format == "tlbr":
-            x1, y1 = (x1 - x2 / 2), (y1 - y2 / 2)
-            x2, y2 = (x1 + x2), (y1 + y2)
-        if image_size is not None:
-            w, h = image_size
-            x1, x2 = round(x1 * w), round(x2 * w)
-            y1, y2 = round(y1 * h), round(y2 * h)
-        labels.append(int(label))
-        bboxes.append((x1, y1, x2, y2))
-    if index_name_map is None:
-        return {"labels": labels, "bboxes": bboxes}
-    filtered_labels = []
-    filtered_bboxes = []
-    for label, bbox in zip(labels, bboxes):
-        try:
-            filtered_labels.append(index_name_map[label])
-            filtered_bboxes.append(bbox)
-        except KeyError:
-            continue
-    return {"labels": filtered_labels, "bboxes": filtered_bboxes}
+        x, y, w, h = (float(coord) for coord in coords)
+        indexes.append(int(label))
+        bboxes.append(
+            (
+                max(0.0, min(1.0, x)),
+                max(0.0, min(1.0, y)),
+                max(0.0, min(1.0, w)),
+                max(0.0, min(1.0, h)),
+            )
+        )
+    detection = {"indexes": indexes, "bboxes": bboxes}
+    if index_name_map is not None:
+        detection["labels"] = [index_name_map[idx] for idx in indexes]
+    return detection
 
 
 def write_detection_to_annotation(
-    detection: DetectionBoundingBoxes,
-    ann_path: str | Path,
+    detection: YOLODetection,
+    annotation_file: str | Path,
 ):
     lines = [
-        f"{label} {x1} {y1} {x2} {y2}\n"
-        for label, (x1, y1, x2, y2)
-        in zip(detection["labels"], detection["bboxes"])
+        "{:d} {:8f} {:8f} {:8f} {:8f}\n".format(idx, *coords)
+        for idx, coords in zip(detection["indexes"], detection["bboxes"])
     ]
-    with open(ann_path, "w") as ann_file:
+    with open(annotation_file, "w") as ann_file:
         ann_file.writelines(lines)

@@ -9,3 +9,6 @@ __pycache__/
 label_studio/app/
 label_studio/local_store/
 label_studio/projects/
+
+# Generated datasets
+datasets/

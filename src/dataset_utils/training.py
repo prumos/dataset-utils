@@ -4,13 +4,14 @@ from typing import TypeVar
 T = TypeVar("T")
 
 
-def check_ratios(ratios: list[float]):
+def check_ratios(ratios: list[float]) -> list[float]:
     total_sum = sum(ratios)
     if not math.isclose(total_sum, 1.0, rel_tol=0, abs_tol=1e-9):
         raise ValueError(f"Rations do not sum to 1.0, got {total_sum}")
     for i, ratio in enumerate(ratios):
         if ratio < 0.0 or ratio > 1.0:
             raise ValueError(f"Ration at index {i} is not in [0, 1], got {ratio}")
+    return ratios
 
 
 def sequential_split(
