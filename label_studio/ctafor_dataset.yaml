@@ -1,9 +1,9 @@
-projects_dir: "./label_studio/projects/json"
+base_dir: "./label_studio/projects/json"
 save_dir: "./datasets/ctafor_01"
 
 projects:
   0:
-    filename: "ctafor_01.json"
+    path: "ctafor_01.json"
     rois:
       square1: [0, 0, 700, 700]
       square2: [0, 0, 500, 500]
@@ -11,5 +11,5 @@ projects:
       train: 0.7
       val: 0.15
       test: 0.15
-  4:
-    filename: "ctafor_pontesvieira_visconde.json"
+  1:
+    path: "ctafor_pontesvieira_visconde.json"

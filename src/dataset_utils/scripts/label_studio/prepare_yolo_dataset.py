@@ -22,7 +22,7 @@ def _preprare_destination(save_dir: Path) -> Path:
 def prepare_yolo_dataset(config_file: str | Path):
     with open(config_file, mode="r") as config_file:
         config = yaml.safe_load(config_file)
-    projects_dir = Path(config["projects_dir"]).resolve()
+    projects_dir = Path(config["base_dir"]).resolve()
     local_imgs_dir = label_studio.get_local_files_root()
     save_dir = _preprare_destination(config["save_dir"])
     classes = set()
@@ -31,7 +31,7 @@ def prepare_yolo_dataset(config_file: str | Path):
     for project_config in config["projects"].values():
         image_detec_map = {}
         for task in label_studio.load_json_project(
-            projects_dir / project_config["filename"]
+            projects_dir / project_config["path"]
         ):
             image_path = local_imgs_dir / task["data"]["image"].removeprefix(
                 label_studio.LOCAL_FILES_PREFIX
