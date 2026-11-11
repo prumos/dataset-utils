@@ -54,7 +54,6 @@ echo Failed to create Label Studio directory tree in "%BASE_DIR%". >&2
 exit /b 1
 
 
-:: Configure environment variables
 :configure
 if defined HOST_URL (
     echo(%HOST_URL%| findstr /r /i /b /c:"http://" /c:"https://" >nul
@@ -111,15 +110,10 @@ endlocal & (
 )
 
 
-:: Activate Python virtual environment
 if not defined VIRTUAL_ENV (
     echo %LABEL_STUDIO_BASE_DIR%\venv\Scripts\activate.bat
     call "%LABEL_STUDIO_BASE_DIR%\venv\Scripts\activate.bat"
 )
-
-
-:: Start Label Studio
-label-studio start
 
 
 exit /b 0
