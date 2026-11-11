@@ -1,6 +1,8 @@
 base_dir: "./label_studio/projects/json"
 save_dir: "./datasets/ctafor_01"
 
+resize: [800, 800]
+
 projects:
   0:
     path: "ctafor_01.json"

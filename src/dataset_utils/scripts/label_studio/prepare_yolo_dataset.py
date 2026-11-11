@@ -42,7 +42,7 @@ def prepare_yolo_dataset(config_file: str | Path):
             detection = detection[0]
             if detection["canvas_size"][0] == 1:
                 with Image.open(image_path) as img:
-                    detection = detection_utils.scale_detection(
+                    detection = detection_utils.scale_detection_(
                         detection=detection,
                         canvas_size=img.size,
                     )
@@ -60,6 +60,7 @@ def prepare_yolo_dataset(config_file: str | Path):
                 ),
             )
         project_rois = project_config.get("rois", {})
+        resize = project_config.get("resize", config.get("resize", None))
         for split, images in zip(splits, image_splits):
             if not images:
                 continue
@@ -82,15 +83,31 @@ def prepare_yolo_dataset(config_file: str | Path):
                             roi_detec = detection_utils.crop_detection(
                                 detection, *coords,
                             )
+                            roi_detec = detection_utils.scale_detection_(
+                                roi_detec, canvas_size=(1, 1),
+                            )
+                            if resize is not None:
+                                roi_img = roi_img.resize(resize)
                             dest_path = images_split_dir / (
                                 f"{image_path.stem}_{name}{image_path.suffix}"
                             )
                             detections_store[split][dest_path.stem] = roi_detec
                             roi_img.save(dest_path)
                 else:
-                    detection = image_detec_map[image_path]
+                    if resize is None:
+                        shutil.copy2(
+                            image_path,
+                            images_split_dir / image_path.name,
+                        )
+                    else:
+                        with Image.open(image_path) as img:
+                            img = img.resize(resize)
+                            img.save(images_split_dir / image_path.name)
+                    detection = detection_utils.scale_detection_(
+                        image_detec_map[image_path],
+                        canvas_size=(1, 1),
+                    )
                     detections_store[split][image_path.stem] = detection
-                    shutil.copy2(image_path, images_split_dir / image_path.name)
     classes = sorted(classes)
     dataset_metadata["names"] = {
         i: cls_name for i, cls_name in enumerate(classes)
@@ -100,10 +117,6 @@ def prepare_yolo_dataset(config_file: str | Path):
         labels_split_dir = save_dir / "labels" / split
         labels_split_dir.mkdir(exist_ok=True)
         for ann_stem, detection in stem_detect_map.items():
-            detection = detection_utils.scale_detection(
-                detection=detection,
-                canvas_size=(1, 1),
-            )
             detection["indexes"] = [
                 name_index_map[label] for label in detection["labels"]
             ]

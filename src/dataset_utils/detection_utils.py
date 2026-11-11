@@ -7,7 +7,7 @@ class DetectionBoudingBoxes(TypedDict):
     canvas_size: tuple[int, int]
 
 
-def scale_detection(
+def scale_detection_(
     detection: DetectionBoudingBoxes,
     canvas_size: tuple[int, int],
 ) -> DetectionBoudingBoxes:
