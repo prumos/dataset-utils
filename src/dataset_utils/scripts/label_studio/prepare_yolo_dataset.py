@@ -59,7 +59,7 @@ def prepare_yolo_dataset(config_file: str | Path):
                     [project_config["splits"][split] for split in splits]
                 ),
             )
-        rois = project_config.get("rois", {})
+        project_rois = project_config.get("rois", {})
         for split, images in zip(splits, image_splits):
             if not images:
                 continue
@@ -69,6 +69,11 @@ def prepare_yolo_dataset(config_file: str | Path):
                 images_split_dir.relative_to(save_dir).as_posix()
             )
             for image_path in images:
+                try:
+                    parent_rois = config["rois"][image_path.parts[-2]]
+                except KeyError:
+                    parent_rois = {}
+                rois = project_rois | parent_rois
                 if rois:
                     detection = image_detec_map[image_path]
                     with Image.open(image_path) as img:
