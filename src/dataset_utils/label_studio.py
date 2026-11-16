@@ -27,11 +27,11 @@ def prediction_from_yolo_detection(
     source_value: str = "$image",
     model_version: str  = "",
 ) -> LabelStudioPrediction:
-    yolo_detection = yolo.load_detection_annotation(
+    detection = yolo.load_detection_from_annotation(
         annotation_file,
         index_name_map=index_name_map,
     )
-    target_classes = frozenset(yolo_detection["labels"])
+    target_classes = frozenset(detection["labels"])
     if include_classes is not None:
         target_classes = target_classes.intersection(include_classes)
     if exclude_classes is not None:
@@ -46,15 +46,15 @@ def prediction_from_yolo_detection(
                 "source": source_value,
                 "value": {
                     "rectanglelabels": [label],
-                    "x": (bbox[0] - bbox[2] / 2) * 100.0,
-                    "y": (bbox[1] - bbox[3] / 2) * 100.0,
-                    "width": bbox[2] * 100.0,
-                    "height": bbox[3] * 100.0,
+                    "x": (bbox[0] - bbox[2] / 2) * 100,
+                    "y": (bbox[1] - bbox[3] / 2) * 100,
+                    "width": bbox[2] * 100,
+                    "height": bbox[3] * 100,
                 }
             }
             for label, bbox in zip(
-                yolo_detection["labels"],
-                yolo_detection["bboxes"],
+                detection["labels"],
+                detection["bboxes"],
             )
             if label in target_classes
         ]

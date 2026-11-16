@@ -9,7 +9,7 @@ from PIL import Image
 from dataset_utils import detection_utils, label_studio, training, yolo
 
 
-def _preprare_destination(save_dir: Path) -> Path:
+def _preprare_destination(save_dir: str | Path) -> Path:
     save_dir = Path(save_dir).resolve()
     save_dir.mkdir(parents=True, exist_ok=True)
     images_dir = save_dir / "images"
@@ -42,7 +42,7 @@ def prepare_yolo_dataset(config_file: str | Path):
             detection = detection[0]
             if detection["canvas_size"][0] == 1:
                 with Image.open(image_path) as img:
-                    detection = detection_utils.scale_detection_(
+                    detection = detection_utils.scale_detection(
                         detection=detection,
                         canvas_size=img.size,
                     )
@@ -83,7 +83,7 @@ def prepare_yolo_dataset(config_file: str | Path):
                             roi_detec = detection_utils.crop_detection(
                                 detection, *coords,
                             )
-                            roi_detec = detection_utils.scale_detection_(
+                            roi_detec = detection_utils.scale_detection(
                                 roi_detec, canvas_size=(1, 1),
                             )
                             if resize is not None:
@@ -103,8 +103,8 @@ def prepare_yolo_dataset(config_file: str | Path):
                         with Image.open(image_path) as img:
                             img = img.resize(resize)
                             img.save(images_split_dir / image_path.name)
-                    detection = detection_utils.scale_detection_(
-                        image_detec_map[image_path],
+                    detection = detection_utils.scale_detection(
+                        detection=image_detec_map[image_path],
                         canvas_size=(1, 1),
                     )
                     detections_store[split][image_path.stem] = detection
@@ -137,7 +137,7 @@ def prepare_yolo_dataset(config_file: str | Path):
 def _get_args_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Prepare a YOLO custom dataset from a list "
+            "Prepare a YOLO custom dataset from a set "
             "of Label Studio exported JSON projects."
         )
     )

@@ -1,24 +1,32 @@
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 
 class DetectionBoudingBoxes(TypedDict):
     bboxes: list[tuple[float, float, float, float]]
-    labels: list[str]
     canvas_size: tuple[int, int]
+    labels: NotRequired[list[str]]
+    indexes: NotRequired[list[int]]
 
 
-def scale_detection_(
+def scale_detection(
     detection: DetectionBoudingBoxes,
     canvas_size: tuple[int, int],
 ) -> DetectionBoudingBoxes:
     w_scale = canvas_size[0] / detection["canvas_size"][0]
     h_scale = canvas_size[1] / detection["canvas_size"][1]
-    detection["bboxes"] = [
-        (x * w_scale, y * h_scale, w * w_scale, h * h_scale)
-        for (x, y, w, h) in detection["bboxes"]
-    ]
-    detection["canvas_size"] = canvas_size
-    return detection
+    scaled_detec = {
+        "bboxes": [
+            (x * w_scale, y * h_scale, w * w_scale, h * h_scale)
+            for (x, y, w, h) in detection["bboxes"]
+        ],
+        "canvas_size": canvas_size,
+    }
+    for k in ("labels", "indexes"):
+        try:
+            scaled_detec[k] = detection[k]
+        except KeyError:
+            continue
+    return scaled_detec
 
 
 def crop_detection(
@@ -27,8 +35,8 @@ def crop_detection(
     top: int,
     right: int,
     bottom: int,
-    min_box_width: int = 5,
-    min_box_height: int = 5,
+    min_box_width: float = 5.0,
+    min_box_height: float = 5.0,
 ):
     bboxes = []
     labels = []
@@ -44,14 +52,19 @@ def crop_detection(
         labels.append(label)
         bboxes.append(
             (
-                (x1 + x2) / 2,
-                (y1 + y2) / 2,
+                (x1 + x2) / 2 - left,
+                (y1 + y2) / 2 - top,
                 x2 - x1,
                 y2 - y1,
             )
         )
-    return {
+    cropped_detec = {
         "bboxes": bboxes,
-        "labels": labels,
         "canvas_size": (right - left, bottom - top),
     }
+    for k in ("labels", "indexes"):
+        try:
+            cropped_detec[k] = detection[k]
+        except KeyError:
+            continue
+    return cropped_detec
