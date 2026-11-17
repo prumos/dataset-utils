@@ -1,8 +1,9 @@
 import argparse
-from collections import defaultdict
-import yaml
-import shutil
+from collections import Counter, defaultdict
+import json
 from pathlib import Path
+import shutil
+import yaml
 
 from PIL import Image
 
@@ -28,8 +29,15 @@ def prepare_yolo_dataset(config_file: str | Path):
     classes = set()
     dataset_metadata = {"path": save_dir.as_posix()}
     detections_store = defaultdict(dict)
+    dataset_summary = {
+        "base_count": defaultdict(int),
+        "roi_count": defaultdict(int),
+        "splits": defaultdict(int),
+    }
     for project_config in config["projects"].values():
         image_detec_map = {}
+        project_summary = defaultdict(lambda : defaultdict(int))
+        dataset_summary[project_config["path"]] = project_summary
         for task in label_studio.load_json_project(
             projects_dir / project_config["path"]
         ):
@@ -46,6 +54,10 @@ def prepare_yolo_dataset(config_file: str | Path):
                         detection=detection,
                         canvas_size=img.size,
                     )
+            project_summary["base_resolution"]["{}x{}".format(*detection["canvas_size"])] += 1
+            for cls_name, cls_count in Counter(detection["labels"]).items():
+                dataset_summary["base_count"][cls_name] += cls_count
+                project_summary["base_count"][cls_name] += cls_count
             classes.update(detection["labels"])
             image_detec_map[image_path] = detection
         splits = sorted(project_config.get("splits", []))
@@ -64,6 +76,8 @@ def prepare_yolo_dataset(config_file: str | Path):
         for split, images in zip(splits, image_splits):
             if not images:
                 continue
+            dataset_summary["splits"][split] += len(images)
+            project_summary["splits"][split] += len(images)
             images_split_dir = save_dir / "images" / split
             images_split_dir.mkdir(exist_ok=True)
             dataset_metadata[split] = (
@@ -83,6 +97,10 @@ def prepare_yolo_dataset(config_file: str | Path):
                             roi_detec = detection_utils.crop_detection(
                                 detection, *coords,
                             )
+                            project_summary["rois"]["{}x{}".format(*roi_detec["canvas_size"])] += 1
+                            for cls_name, cls_count in Counter(roi_detec["labels"]).items():
+                                dataset_summary["roi_count"][cls_name] += cls_count
+                                project_summary["roi_count"][cls_name] += cls_count
                             roi_detec = detection_utils.scale_detection(
                                 roi_detec, canvas_size=(1, 1),
                             )
@@ -124,6 +142,8 @@ def prepare_yolo_dataset(config_file: str | Path):
                 detection=detection,
                 annotation_file=(labels_split_dir / f"{ann_stem}.txt"),
             )
+    with (save_dir / "summary.json").open("w") as summary_json:
+        json.dump(obj=dataset_summary, fp=summary_json, indent=4)
     with (save_dir / f"{save_dir.name}.yaml").open("w") as metadata_yaml:
         yaml.dump(
             data=dataset_metadata,
