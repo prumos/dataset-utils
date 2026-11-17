@@ -39,8 +39,8 @@ def crop_detection(
     min_box_height: float = 5.0,
 ):
     bboxes = []
-    labels = []
-    for label, bbox in zip(detection["labels"], detection["bboxes"]):
+    selection = []
+    for i, bbox in enumerate(detection["bboxes"]):
         x1 = bbox[0] - bbox[2] / 2
         y1 = bbox[1] - bbox[3] / 2
         x2 = min(right, x1 + bbox[2])
@@ -49,7 +49,7 @@ def crop_detection(
         y1 = max(top, y1)
         if x1 >= (x2 - min_box_width) or y1 >= (y2 - min_box_height):
             continue
-        labels.append(label)
+        selection.append(i)
         bboxes.append(
             (
                 (x1 + x2) / 2 - left,
@@ -62,9 +62,9 @@ def crop_detection(
         "bboxes": bboxes,
         "canvas_size": (right - left, bottom - top),
     }
-    for k in ("labels", "indexes"):
+    for key in ("labels", "indexes"):
         try:
-            cropped_detec[k] = detection[k]
+            cropped_detec[key] = [detection[key][i] for i in selection]
         except KeyError:
             continue
     return cropped_detec
