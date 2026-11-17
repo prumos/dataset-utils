@@ -21,9 +21,9 @@ def scale_detection(
         ],
         "canvas_size": canvas_size,
     }
-    for k in ("labels", "indexes"):
+    for key in ("labels", "indexes"):
         try:
-            scaled_detec[k] = detection[k]
+            scaled_detec[key] = detection[key]
         except KeyError:
             continue
     return scaled_detec
@@ -64,7 +64,8 @@ def crop_detection(
     }
     for key in ("labels", "indexes"):
         try:
-            cropped_detec[key] = [detection[key][i] for i in selection]
+            value = detection[key]
+            cropped_detec[key] = [value[i] for i in selection]
         except KeyError:
             continue
     return cropped_detec
