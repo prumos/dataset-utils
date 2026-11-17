@@ -1,6 +1,6 @@
 import argparse
-from collections import defaultdict
 import json
+from collections import defaultdict
 from pathlib import Path
 
 from dataset_utils import label_studio

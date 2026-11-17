@@ -59,7 +59,7 @@ def _run() -> int:
             "--indent",
             type=int,
             default=None,
-            help="Set JSON indentation size."
+            help="Set JSON indentation size.",
         )
         args = parser.parse_args()
         gen_tasks_for_local_images(

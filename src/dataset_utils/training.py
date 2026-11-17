@@ -10,7 +10,9 @@ def check_ratios(ratios: list[float]) -> list[float]:
         raise ValueError(f"Rations do not sum to 1.0, got {total_sum}")
     for i, ratio in enumerate(ratios):
         if ratio < 0.0 or ratio > 1.0:
-            raise ValueError(f"Ration at index {i} is not in [0, 1], got {ratio}")
+            raise ValueError(
+                f"Ration at index {i} is not in [0, 1], got {ratio}"
+            )
     return ratios
 
 

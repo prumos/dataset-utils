@@ -1,10 +1,10 @@
 import argparse
-from collections import Counter, defaultdict
 import json
-from pathlib import Path
 import shutil
-import yaml
+from collections import Counter, defaultdict
+from pathlib import Path
 
+import yaml
 from PIL import Image
 
 from dataset_utils import detection_utils, label_studio, training, yolo
@@ -21,8 +21,8 @@ def _preprare_destination(save_dir: str | Path) -> Path:
 
 
 def prepare_yolo_dataset(config_file: str | Path):
-    with open(config_file, mode="r") as config_file:
-        config = yaml.safe_load(config_file)
+    with open(config_file, mode="r") as config:
+        config = yaml.safe_load(config)
     projects_dir = Path(config["base_dir"]).resolve()
     local_imgs_dir = label_studio.get_local_files_root()
     save_dir = _preprare_destination(config["save_dir"])
@@ -36,7 +36,7 @@ def prepare_yolo_dataset(config_file: str | Path):
     }
     for project_config in config["projects"].values():
         image_detec_map = {}
-        project_summary = defaultdict(lambda : defaultdict(int))
+        project_summary = defaultdict(lambda: defaultdict(int))
         dataset_summary[project_config["path"]] = project_summary
         for task in label_studio.load_json_project(
             projects_dir / project_config["path"]
@@ -54,7 +54,9 @@ def prepare_yolo_dataset(config_file: str | Path):
                         detection=detection,
                         canvas_size=img.size,
                     )
-            project_summary["base_resolution"]["{}x{}".format(*detection["canvas_size"])] += 1
+            project_summary["base_resolution"][
+                "{}x{}".format(*detection["canvas_size"])
+            ] += 1
             for cls_name, cls_count in Counter(detection["labels"]).items():
                 dataset_summary["base_count"][cls_name] += cls_count
                 project_summary["base_count"][cls_name] += cls_count
@@ -80,9 +82,9 @@ def prepare_yolo_dataset(config_file: str | Path):
             project_summary["splits"][split] += len(images)
             images_split_dir = save_dir / "images" / split
             images_split_dir.mkdir(exist_ok=True)
-            dataset_metadata[split] = (
-                images_split_dir.relative_to(save_dir).as_posix()
-            )
+            dataset_metadata[split] = images_split_dir.relative_to(
+                save_dir
+            ).as_posix()
             for image_path in images:
                 try:
                     parent_rois = config["rois"][image_path.parts[-2]]
@@ -95,14 +97,24 @@ def prepare_yolo_dataset(config_file: str | Path):
                         for name, coords in rois.items():
                             roi_img = img.crop(coords)
                             roi_detec = detection_utils.crop_detection(
-                                detection, *coords,
+                                detection,
+                                *coords,
                             )
-                            project_summary["rois"]["{}x{}".format(*roi_detec["canvas_size"])] += 1
-                            for cls_name, cls_count in Counter(roi_detec["labels"]).items():
-                                dataset_summary["roi_count"][cls_name] += cls_count
-                                project_summary["roi_count"][cls_name] += cls_count
+                            project_summary["rois"][
+                                "{}x{}".format(*roi_detec["canvas_size"])
+                            ] += 1
+                            for cls_name, cls_count in Counter(
+                                roi_detec["labels"]
+                            ).items():
+                                dataset_summary["roi_count"][cls_name] += (
+                                    cls_count
+                                )
+                                project_summary["roi_count"][cls_name] += (
+                                    cls_count
+                                )
                             roi_detec = detection_utils.scale_detection(
-                                roi_detec, canvas_size=(1, 1),
+                                roi_detec,
+                                canvas_size=(1, 1),
                             )
                             if resize is not None:
                                 roi_img = roi_img.resize(resize)
@@ -151,7 +163,6 @@ def prepare_yolo_dataset(config_file: str | Path):
             indent=2,
             sort_keys=False,
         )
-    return
 
 
 def _get_args_parser() -> argparse.ArgumentParser:

@@ -30,3 +30,10 @@ group-by-prefix = "dataset_utils.scripts.label_studio.group_by_prefix:_run"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.lint]
+extend-select = ["E501"]
+ignore = ["BLE001", "UP032", "UP047"]

@@ -1,15 +1,15 @@
-import os
 import json
+import os
 from pathlib import Path
 from typing import Any, NotRequired, TypedDict
 
 from dataset_utils import detection_utils, yolo
 
-
 LOCAL_FILES_PREFIX = "/data/local-files/?d="
 
 type LabelStudioPrediction = dict[str, Any]
 type LabelStudioAnnotation = dict[str, Any]
+
 
 class LabelStudioTask(TypedDict):
     data: dict[str, Any]
@@ -25,7 +25,7 @@ def prediction_from_yolo_detection(
     from_name_value: str = "label",
     to_name_value: str = "image",
     source_value: str = "$image",
-    model_version: str  = "",
+    model_version: str = "",
 ) -> LabelStudioPrediction:
     detection = yolo.load_detection_from_annotation(
         annotation_file,
@@ -50,14 +50,14 @@ def prediction_from_yolo_detection(
                     "y": (bbox[1] - bbox[3] / 2) * 100,
                     "width": bbox[2] * 100,
                     "height": bbox[3] * 100,
-                }
+                },
             }
             for label, bbox in zip(
                 detection["labels"],
                 detection["bboxes"],
             )
             if label in target_classes
-        ]
+        ],
     }
 
 
@@ -80,7 +80,7 @@ def get_local_files_root(
             'Set "LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED" to "true" and '
             '"LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT" to the appropriate path.'
         )
-    local_files_root  = os.environ.get(
+    local_files_root = os.environ.get(
         "LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT",
         "",
     )
@@ -96,7 +96,7 @@ def check_file_formats(fmts: list[str]) -> list[str]:
 
 def gen_tasks_for_local_images(
     images_dir: str | Path,
-    image_fmts: list[str] = [".jpg", ".png"],
+    image_fmts: list[str] | None = None,
     recurse_dir: bool = False,
     include_classes: list[str] | None = None,
     exclude_classes: list[str] | None = None,
@@ -109,7 +109,11 @@ def gen_tasks_for_local_images(
             f'"{images_dir}" is not part of the '
             'local files root tree "{local_root}"'
         )
-    image_fmts = frozenset(check_file_formats(image_fmts))
+    image_fmts = frozenset(
+        check_file_formats(
+            [".jpg", ".png"] if image_fmts is None else image_fmts
+        )
+    )
     target_dirs = (
         [Path(step[0]) for step in os.walk(images_dir)]
         if recurse_dir
@@ -142,7 +146,6 @@ def gen_tasks_for_local_images(
                     pass
             with img.with_suffix(".json").open("w") as task_file:
                 json.dump(obj=task, fp=task_file, indent=json_indentation)
-    return
 
 
 def detections_from_task(
