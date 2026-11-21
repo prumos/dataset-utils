@@ -10,7 +10,7 @@ from PIL import Image
 from dataset_utils import detection_utils, label_studio, training, yolo
 
 
-def _preprare_destination(save_dir: str | Path) -> Path:
+def _preprare_destination(save_dir: str) -> Path:
     save_dir = Path(save_dir).resolve()
     save_dir.mkdir(parents=True, exist_ok=True)
     images_dir = save_dir / "images"
@@ -20,19 +20,26 @@ def _preprare_destination(save_dir: str | Path) -> Path:
     return save_dir
 
 
-def prepare_yolo_dataset(config_file: str | Path):
+def prepare_yolo_dataset(
+    config_file: str,
+    save_dir: str | None = None,
+    disable_rois: bool = False,
+) -> None:
     with open(config_file, mode="r") as config:
         config = yaml.safe_load(config)
     projects_dir = Path(config["base_dir"]).resolve()
     local_imgs_dir = label_studio.get_local_files_root()
-    save_dir = _preprare_destination(config["save_dir"])
+    save_dir = _preprare_destination(
+        config["save_dir"] if save_dir is None else save_dir
+    )
     classes = set()
     dataset_metadata = {"path": save_dir.as_posix()}
     detections_store = defaultdict(dict)
     dataset_summary = {
         "base_count": defaultdict(int),
         "roi_count": defaultdict(int),
-        "splits": defaultdict(int),
+        "base_splits": defaultdict(int),
+        "roi_splits": defaultdict(int),
     }
     for project_config in config["projects"].values():
         image_detec_map = {}
@@ -78,8 +85,8 @@ def prepare_yolo_dataset(config_file: str | Path):
         for split, images in zip(splits, image_splits):
             if not images:
                 continue
-            dataset_summary["splits"][split] += len(images)
-            project_summary["splits"][split] += len(images)
+            dataset_summary["base_splits"][split] += len(images)
+            project_summary["base_splits"][split] += len(images)
             images_split_dir = save_dir / "images" / split
             images_split_dir.mkdir(exist_ok=True)
             dataset_metadata[split] = images_split_dir.relative_to(
@@ -91,7 +98,9 @@ def prepare_yolo_dataset(config_file: str | Path):
                 except KeyError:
                     parent_rois = {}
                 rois = project_rois | parent_rois
-                if rois:
+                if rois and not disable_rois:
+                    dataset_summary["roi_splits"][split] += len(rois)
+                    project_summary["roi_splits"][split] += len(rois)
                     detection = image_detec_map[image_path]
                     with Image.open(image_path) as img:
                         for name, coords in rois.items():
@@ -174,8 +183,24 @@ def _get_args_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "config_file",
-        type=Path,
+        type=str,
         help="Configuration file that stipulates how to generate the dataset.",
+    )
+    parser.add_argument(
+        "save_dir",
+        type=str,
+        nargs="?",
+        default=None,
+        help=(
+            "Optional location to save the dataset. Can be specified inside "
+            "`config_file` instead. If suplied, overwrites any destination "
+            "specified in the `config_file` \"save_dir\" key."
+        ),
+    )
+    parser.add_argument(
+        "--disable_rois",
+        action="store_true",
+        help="Disable ROIs altogether.",
     )
     return parser
 
@@ -184,7 +209,11 @@ def _run():
     try:
         parser = _get_args_parser()
         args = parser.parse_args()
-        prepare_yolo_dataset(args.config_file)
+        prepare_yolo_dataset(
+            args.config_file,
+            args.save_dir,
+            args.disable_rois,
+        )
         return 0
     except Exception:
         import traceback
