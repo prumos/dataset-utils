@@ -1,5 +1,5 @@
 base_dir: "./label_studio/projects/prefix"
-save_dir: "./datasets/ctafor_02"
+save_dir: "./datasets/ctafor_02_rois"
 
 
 projects:
