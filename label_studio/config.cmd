@@ -27,7 +27,7 @@ exit /b 0
 
 :base_dir
 if "%~2"=="" (
-    echo Error: %~1 requires a directory path argument. >&2
+    echo Error: %~1 requires a directory path as argument. >&2
     exit /b 1
 )
 
@@ -39,7 +39,7 @@ goto parse_args
 
 :host_name
 if "%~2"=="" (
-    echo Error: %~1 requires a hostname argument. >&2
+    echo Error: %~1 requires a host URL as argument. >&2
     exit /b 1
 )
 
@@ -68,12 +68,8 @@ for %%I in ("%BASE_DIR%") do set "BASE_DIR=%%~fI"
 if "%BASE_DIR:~-1%"=="\" set "BASE_DIR=%BASE_DIR:~0,-1%"
 
 if not exist "%BASE_DIR%\" (
-    if exist "%BASE_DIR%" (
-        echo "%BASE_DIR%" is not a directory. >&2
-        exit /b 1
-    )
-    mkdir "%BASE_DIR%" || goto mkdir_error
-    echo Base directory created: "%BASE_DIR%"
+    echo "%BASE_DIR%" is not a directory. >&2
+    exit /b 1
 )
 
 if not exist "%BASE_DIR%\label_studio\local_store" (
@@ -84,10 +80,12 @@ if not exist "%BASE_DIR%\label_studio\projects" (
     mkdir "%BASE_DIR%\label_studio\projects" || goto mkdir_error
 )
 
+
 set "LABEL_STUDIO_PORT=8080"
 set "LABEL_STUDIO_BASE_DATA_DIR=%BASE_DIR:\=\\%\\label_studio\\app"
 set "LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true"
 set "LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=%BASE_DIR:\=\\%\\label_studio\\local_store"
+
 
 echo Label Studio environment configured:
 echo   LABEL_STUDIO_BASE_DATA_DIR=%LABEL_STUDIO_BASE_DATA_DIR%
@@ -98,6 +96,7 @@ if defined HOST_URL (
     echo   LABEL_STUDIO_HOST=%HOST_URL%
     echo   CSRF_TRUSTED_ORIGINS=%HOST_URL%
 )
+
 
 endlocal & (
     set "LABEL_STUDIO_BASE_DIR=%BASE_DIR%"
