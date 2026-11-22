@@ -1,22 +1,27 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.13.9,<0.14.0"]
+build-backend = "uv_build"
 
 
 [project]
 name = "dataset-utils"
-description = "Data and dataset utilities"
 version = "0.2.0"
+description = "Data and dataset utilities"
+readme = "README.md"
+authors = [
+    { name = "nelioasousa", email = "corneliosoursaphb@gmail.com" }
+]
 requires-python = ">=3.12"
 dependencies = [
-    "label-studio",
-    "Pillow",
-    "pyyaml",
+    "label-studio>=1.23.2",
+    "pillow>=13.0.0",
+    "pyyaml>=6.0.4",
 ]
-readme = "README.md"
 
 [project.optional-dependencies]
-dev = ["ruff"]
+dev = [
+    "ruff>=0.17.6",
+]
 
 [project.urls]
 Repository = "https://github.com/prumos/dataset-utils"
@@ -27,9 +32,6 @@ gen-tasks = "dataset_utils.scripts.label_studio.gen_tasks:_run"
 yolo-dataset = "dataset_utils.scripts.label_studio.prepare_yolo_dataset:_run"
 group-by-prefix = "dataset_utils.scripts.label_studio.group_by_prefix:_run"
 
-
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [tool.ruff]
 line-length = 80
