@@ -34,6 +34,7 @@ Issues = "https://github.com/prumos/dataset-utils/issues"
 gen-tasks = "dataset_utils.scripts.label_studio.gen_tasks:_run"
 yolo-dataset = "dataset_utils.scripts.label_studio.prepare_yolo_dataset:_run"
 group-by-prefix = "dataset_utils.scripts.label_studio.group_by_prefix:_run"
+select-images = "dataset_utils.scripts.yolo.images_selection:_run"
 
 
 [tool.uv.sources]

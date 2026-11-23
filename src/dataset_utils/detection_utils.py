@@ -1,4 +1,8 @@
 from typing import NotRequired, TypedDict
+from pathlib import Path
+
+
+IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png"]
 
 
 class DetectionBoudingBoxes(TypedDict):
@@ -69,3 +73,17 @@ def crop_detection(
         except KeyError:
             continue
     return cropped_detec
+
+
+def list_images_in_directory(
+    target_directory: str | Path,
+    extensions: list[str] = None,
+):
+    extensions = frozenset(
+        IMAGE_EXTENSIONS if extensions is None else extensions
+    )
+    return [
+        item
+        for item in Path(target_directory).iterdir()
+        if item.suffix in extensions
+    ]

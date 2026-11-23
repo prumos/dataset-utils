@@ -1,7 +1,11 @@
 import math
-from typing import TypeVar
+from collections.abc import Sequence
+from typing import TypedDict, TypeVar
+from pathlib import Path
 
-T = TypeVar("T")
+import torch
+from ultralytics import YOLO
+from ultralytics.engine.results import Results
 
 
 def check_ratios(ratios: list[float]) -> list[float]:
@@ -16,9 +20,9 @@ def check_ratios(ratios: list[float]) -> list[float]:
     return ratios
 
 
-def sequential_split(
-    items: list[T],
-    ratios: list[float],
+def sequential_split[T](
+    items: Sequence[T],
+    ratios: Sequence[float],
 ) -> list[list[T]]:
     check_ratios(ratios)
     total_items = len(items)
@@ -32,10 +36,48 @@ def sequential_split(
     )
     for i in remainder_order[:remaining]:
         splits_num_items[i] += 1
-    splits = []
+    splits: list[list[T]] = []
     start = 0
     for count in splits_num_items:
         end = start + count
         splits.append(list(items[start:end]))
         start = end
     return splits
+
+
+class ImagesSelection[T: (str, Path)](TypedDict):
+    images: Sequence[T]
+    scores: list[float]
+    selection: list[int]
+
+
+def total_uncertainty_selection[T: (str, Path)](
+    model: YOLO,
+    imgs: Sequence[T],
+    selection_size: int,
+) -> ImagesSelection[T]:
+    scores: list[float] = []
+    for img in imgs:
+        result = model.predict(
+            source=img,
+            stream=False,
+            imgsz=model.overrides["imgsz"],
+            conf=1e-4,
+            iou=1.0,  # In case the model do not have NMS-free heads
+            nms=False,
+            device=(0 if torch.cuda.is_available() else "cpu"),
+            verbose=False,
+        )
+        scores.append(
+            sum(1.0 - float(conf.item()) for conf in result[0].boxes.conf)
+        )
+    ordering = sorted(
+        range(len(imgs)),
+        key=(lambda i: scores[i]),
+        reverse=True,
+    )
+    return {
+        "images": imgs,
+        "scores": scores,
+        "selection": ordering[:selection_size],
+    }

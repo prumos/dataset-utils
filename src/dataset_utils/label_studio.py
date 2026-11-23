@@ -88,15 +88,9 @@ def get_local_files_root(
     return Path(local_files_root).resolve()
 
 
-def check_file_formats(fmts: list[str]) -> list[str]:
-    return sorted(
-        frozenset((fmt if fmt.startswith(".") else f".{fmt}") for fmt in fmts)
-    )
-
-
 def gen_tasks_for_local_images(
     images_dir: str | Path,
-    image_fmts: list[str] | None = None,
+    image_extensions: list[str] | None = None,
     include_classes: list[str] | None = None,
     exclude_classes: list[str] | None = None,
     json_indentation: int | None = 2,
@@ -108,17 +102,13 @@ def gen_tasks_for_local_images(
             f'"{images_dir}" is not part of the '
             f'local files root at "{local_root}"'
         )
-    image_fmts = frozenset(
-        check_file_formats(
-            [".jpg", ".png"] if image_fmts is None else image_fmts
-        )
-    )
     try:
         index_name_map = yolo.load_index_name_map(images_dir / "classes.txt")
     except FileNotFoundError:
         index_name_map = None
-    for img in (
-        item for item in images_dir.iterdir() if item.suffix in image_fmts
+    for img in detection_utils.list_images_in_directory(
+        target_directory=images_dir,
+        extensions=image_extensions,
     ):
         task = _get_task_for_local_image(img.relative_to(local_root).as_posix())
         if index_name_map is not None:
