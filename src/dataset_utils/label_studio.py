@@ -97,7 +97,6 @@ def check_file_formats(fmts: list[str]) -> list[str]:
 def gen_tasks_for_local_images(
     images_dir: str | Path,
     image_fmts: list[str] | None = None,
-    recurse_dir: bool = False,
     include_classes: list[str] | None = None,
     exclude_classes: list[str] | None = None,
     json_indentation: int | None = 2,
@@ -107,45 +106,35 @@ def gen_tasks_for_local_images(
     if not images_dir.is_relative_to(local_root):
         raise ValueError(
             f'"{images_dir}" is not part of the '
-            'local files root tree "{local_root}"'
+            f'local files root at "{local_root}"'
         )
     image_fmts = frozenset(
         check_file_formats(
             [".jpg", ".png"] if image_fmts is None else image_fmts
         )
     )
-    target_dirs = (
-        [Path(step[0]) for step in os.walk(images_dir)]
-        if recurse_dir
-        else [images_dir]
-    )
-    for images_dir in target_dirs:
-        classes_file = images_dir / "classes.txt"
-        index_name_map = (
-            yolo.load_index_name_map(classes_file)
-            if classes_file.is_file()
-            else None
-        )
-        for img in (
-            item for item in images_dir.iterdir() if item.suffix in image_fmts
-        ):
-            task = _get_task_for_local_image(
-                img.relative_to(local_root).as_posix()
-            )
-            if index_name_map is not None:
-                try:
-                    task["predictions"] = [
-                        prediction_from_yolo_detection(
-                            annotation_file=img.with_suffix(".txt"),
-                            index_name_map=index_name_map,
-                            include_classes=include_classes,
-                            exclude_classes=exclude_classes,
-                        )
-                    ]
-                except FileNotFoundError:
-                    pass
-            with img.with_suffix(".json").open("w") as task_file:
-                json.dump(obj=task, fp=task_file, indent=json_indentation)
+    try:
+        index_name_map = yolo.load_index_name_map(images_dir / "classes.txt")
+    except FileNotFoundError:
+        index_name_map = None
+    for img in (
+        item for item in images_dir.iterdir() if item.suffix in image_fmts
+    ):
+        task = _get_task_for_local_image(img.relative_to(local_root).as_posix())
+        if index_name_map is not None:
+            try:
+                task["predictions"] = [
+                    prediction_from_yolo_detection(
+                        annotation_file=img.with_suffix(".txt"),
+                        index_name_map=index_name_map,
+                        include_classes=include_classes,
+                        exclude_classes=exclude_classes,
+                    )
+                ]
+            except FileNotFoundError:
+                pass
+        with img.with_suffix(".json").open("w") as task_file:
+            json.dump(obj=task, fp=task_file, indent=json_indentation)
 
 
 def detections_from_task(

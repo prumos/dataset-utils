@@ -27,13 +27,8 @@ def _run() -> int:
             "--fmts",
             type=str,
             nargs="+",
-            default=[".jpg", ".png"],
+            default=None,
             help="Image formats to consider.",
-        )
-        parser.add_argument(
-            "--recurse",
-            action="store_true",
-            help="Recurse subdirectories in the file tree.",
         )
         parser.add_argument(
             "--include",
@@ -65,7 +60,6 @@ def _run() -> int:
         gen_tasks_for_local_images(
             images_dir=args.images_dir,
             image_fmts=args.fmts,
-            recurse_dir=args.recurse,
             include_classes=args.include,
             exclude_classes=args.exclude,
             json_indentation=args.indent,
