@@ -93,7 +93,7 @@ def gen_tasks_for_local_images(
     image_extensions: list[str] | None = None,
     include_classes: list[str] | None = None,
     exclude_classes: list[str] | None = None,
-    json_indentation: int | None = 2,
+    json_indent: int | None = 2,
 ) -> None:
     local_root = get_local_files_root()
     images_dir = Path(images_dir).resolve()
@@ -124,7 +124,7 @@ def gen_tasks_for_local_images(
             except FileNotFoundError:
                 pass
         with img.with_suffix(".json").open("w") as task_file:
-            json.dump(obj=task, fp=task_file, indent=json_indentation)
+            json.dump(obj=task, fp=task_file, indent=json_indent)
 
 
 def detections_from_task(
