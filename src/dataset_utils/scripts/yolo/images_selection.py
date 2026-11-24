@@ -13,6 +13,7 @@ def _main(
     images_dir: Path,
     destination_dir: Path,
     selection_size: int,
+    target_classes: list[str] | None = None,
     image_extensions: list[str] | None = None,
 ) -> None:
     model = YOLO(model_weights)
@@ -20,6 +21,7 @@ def _main(
         model=model,
         imgs=list_images_in_directory(images_dir, extensions=image_extensions),
         selection_size=selection_size,
+        target_classes=target_classes,
     )
     destination_dir.mkdir(parents=True, exist_ok=True)
     for selected_index in selection["selection"]:
@@ -42,7 +44,12 @@ def _main(
 
 
 def _get_args_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description=(
+            "Select images based on the total uncertainty of the model "
+            "predictions. It is a simple application of Active Learning."
+        ),
+    )
     parser.add_argument(
         "-i",
         "--imgs",
@@ -68,6 +75,13 @@ def _get_args_parser() -> argparse.ArgumentParser:
         help="Number of images to select.",
     )
     parser.add_argument(
+        "--targets",
+        type=str,
+        nargs="+",
+        default=None,
+        help="Target specific classes during selection.",
+    )
+    parser.add_argument(
         "--extensions",
         type=str,
         nargs="+",
@@ -86,6 +100,7 @@ def _run() -> int:
             images_dir=args.imgs,
             destination_dir=args.dest,
             selection_size=args.size,
+            target_classes=args.targets,
             image_extensions=args.extensions,
         )
         return 0

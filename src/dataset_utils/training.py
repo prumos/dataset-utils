@@ -55,8 +55,14 @@ def total_uncertainty_selection[T: (str, Path)](
     model: YOLO,
     imgs: Sequence[T],
     selection_size: int,
+    target_classes: list[str] | None = None,
 ) -> ImagesSelection[T]:
     scores: list[float] = []
+    targets = frozenset(
+        (i for i, name in model.names.items() if name in target_classes)
+        if target_classes
+        else model.names
+    )
     for img in imgs:
         result = model.predict(
             source=img,
@@ -67,9 +73,13 @@ def total_uncertainty_selection[T: (str, Path)](
             nms=False,
             device=(0 if torch.cuda.is_available() else "cpu"),
             verbose=False,
-        )
+        )[0]
         scores.append(
-            sum(1.0 - float(conf.item()) for conf in result[0].boxes.conf)
+            sum(
+                1.0 - float(conf.item())
+                for cls, conf in zip(result.boxes.cls, result.boxes.conf)
+                if cls in targets
+            )
         )
     ordering = sorted(
         range(len(imgs)),
