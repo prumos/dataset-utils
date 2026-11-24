@@ -82,7 +82,7 @@ if [[ -n "$HOST_URL" ]]; then
 fi
 
 
-if [[ -n "$VIRTUAL_ENV" ]]; then
+if [[ -z "$VIRTUAL_ENV" ]]; then
     echo "source $LABEL_STUDIO_BASE_DIR/.venv/bin/activate"
     source "$LABEL_STUDIO_BASE_DIR/.venv/bin/activate"
 fi
