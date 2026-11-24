@@ -12,3 +12,6 @@ label_studio/local_store.zip
 
 # Generated datasets
 datasets/
+
+# Models
+*.pt
