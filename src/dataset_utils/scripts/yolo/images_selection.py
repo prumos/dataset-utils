@@ -54,24 +54,28 @@ def _get_args_parser() -> argparse.ArgumentParser:
         "-i",
         "--imgs",
         type=Path,
+        required=True,
         help="Directory path from where to select images.",
     )
     parser.add_argument(
         "-d",
         "--dest",
         type=Path,
+        required=True,
         help="Destination where to move the selected images.",
     )
     parser.add_argument(
         "-m",
         "--model",
         type=Path,
+        required=True,
         help="Selection model's weights.",
     )
     parser.add_argument(
         "-s",
         "--size",
         type=int,
+        required=True,
         help="Number of images to select.",
     )
     parser.add_argument(
