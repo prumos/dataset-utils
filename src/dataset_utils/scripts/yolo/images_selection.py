@@ -35,6 +35,9 @@ def _main(
         )
         result[0].save_txt(destination_dir / f"{image.stem}.txt")
         image.rename(destination_dir / image.name)
+    (destination_dir / "classes.txt").write_text(
+        "\n".join(model.names[idx] for idx in sorted(model.names))
+    )
 
 
 def _get_args_parser() -> argparse.ArgumentParser:
