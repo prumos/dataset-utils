@@ -23,11 +23,11 @@ def _get_args_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "--fmts",
+        "--extensions",
         type=str,
         nargs="+",
         default=None,
-        help="Image formats to consider.",
+        help="Image extensions (e.g.: .jpg, .png, ...) to consider.",
     )
     parser.add_argument(
         "--include",
@@ -64,7 +64,7 @@ def _run() -> int:
         args = parser.parse_args()
         gen_tasks_for_local_images(
             images_dir=args.images_dir,
-            image_fmts=args.fmts,
+            image_extensions=args.extensions,
             include_classes=args.include,
             exclude_classes=args.exclude,
             json_indentation=args.indent,

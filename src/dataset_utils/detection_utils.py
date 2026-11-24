@@ -77,7 +77,7 @@ def crop_detection(
 
 def list_images_in_directory(
     target_directory: str | Path,
-    extensions: list[str] = None,
+    extensions: list[str] | None = None,
 ):
     extensions = frozenset(
         IMAGE_EXTENSIONS if extensions is None else extensions

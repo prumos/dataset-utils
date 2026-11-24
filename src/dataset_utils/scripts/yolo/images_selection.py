@@ -13,11 +13,12 @@ def _main(
     images_dir: Path,
     destination_dir: Path,
     selection_size: int,
+    image_extensions: list[str] | None = None,
 ) -> None:
     model = YOLO(model_weights)
     selection = total_uncertainty_selection(
         model=model,
-        imgs=list_images_in_directory(images_dir),
+        imgs=list_images_in_directory(images_dir, extensions=image_extensions),
         selection_size=selection_size,
     )
     destination_dir.mkdir(parents=True, exist_ok=True)
@@ -66,6 +67,13 @@ def _get_args_parser() -> argparse.ArgumentParser:
         type=int,
         help="Number of images to select.",
     )
+    parser.add_argument(
+        "--extensions",
+        type=str,
+        nargs="+",
+        default=None,
+        help="Image extensions (e.g.: .jpg, .png, ...) to consider.",
+    )
     return parser
 
 
@@ -78,6 +86,7 @@ def _run() -> int:
             images_dir=args.imgs,
             destination_dir=args.dest,
             selection_size=args.size,
+            image_extensions=args.extensions,
         )
         return 0
     except Exception:
