@@ -12,8 +12,8 @@ def _get_args_parser() -> argparse.ArgumentParser:
         )
     )
     parser.add_argument(
-        "-d",
-        "--images_dir",
+        "-i",
+        "--imgs",
         type=str,
         required=True,
         help=(
@@ -63,7 +63,7 @@ def _run() -> int:
         parser = _get_args_parser()
         args = parser.parse_args()
         gen_tasks_for_local_images(
-            images_dir=args.images_dir,
+            images_dir=args.imgs,
             image_extensions=args.extensions,
             include_classes=args.include,
             exclude_classes=args.exclude,
