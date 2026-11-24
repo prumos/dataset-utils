@@ -80,3 +80,9 @@ if [[ -n "$HOST_URL" ]]; then
     echo "  LABEL_STUDIO_HOST=$HOST_URL" 
     echo "  CSRF_TRUSTED_ORIGINS=$HOST_URL"
 fi
+
+
+if [[ -n "$VIRTUAL_ENV" ]]; then
+    echo "source $LABEL_STUDIO_BASE_DIR/.venv/bin/activate"
+    source "$LABEL_STUDIO_BASE_DIR/.venv/bin/activate"
+fi

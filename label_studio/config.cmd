@@ -111,7 +111,7 @@ endlocal & (
 
 if not defined VIRTUAL_ENV (
     echo %LABEL_STUDIO_BASE_DIR%\venv\Scripts\activate.bat
-    call "%LABEL_STUDIO_BASE_DIR%\venv\Scripts\activate.bat"
+    call "%LABEL_STUDIO_BASE_DIR%\.venv\Scripts\activate.bat"
 )
 
 
