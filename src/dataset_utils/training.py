@@ -78,7 +78,7 @@ def total_uncertainty_selection[T: (str, Path)](
             sum(
                 1.0 - float(conf.item())
                 for cls, conf in zip(result.boxes.cls, result.boxes.conf)
-                if cls in targets
+                if int(cls.item()) in targets
             )
         )
     ordering = sorted(
